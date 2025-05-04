@@ -1,0 +1,74 @@
+:root {
+    --color-primary: #007bff;
+    --color-primary-dark: #0056b3;
+    --color-secondary: #6c757d;
+    --color-success: #28a745;
+    --color-danger: #dc3545;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+    --color-white: #ffffff;
+    --color-black: #000000;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .option {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        input {
+            cursor: pointer;
+            padding: 0.5rem;
+            border: 1px solid var(--color-dark);
+            border-radius: 0.5rem;
+            background-color: var(--color-white);
+            color: var(--color-black);
+            font-size: 1rem;
+            font-weight: 400;
+            width: 60%;
+        }
+
+        select {
+            cursor: pointer;
+            padding: 0.5rem;
+            border: 1px solid var(--color-dark);
+            border-radius: 0.5rem;
+            background-color: var(--color-white);
+            color: var(--color-black);
+            font-size: 1rem;
+            font-weight: 400;
+            width: 60%;
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--color-black);
+            width: 40%;
+            text-align: left;
+        }
+    }
+
+    .button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: .5rem 1rem;
+        background-color: var(--color-primary);
+        color: var(--color-white);
+        border-radius: 0.5rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--color-primary-dark);
+        }
+    }
+}
