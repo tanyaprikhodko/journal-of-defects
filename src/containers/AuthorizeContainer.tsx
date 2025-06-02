@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { login } from '../authorizationSlice';
 import './styles/authorization.scss';
 
 
@@ -7,21 +9,39 @@ const AuthorizeContainer: React.FC = () => {
     const [department, setDepartment] = useState('');
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
+    const [showError, setShowError] = useState(false);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+
+    // Get department and user options from Redux authorization state
+    const departmentOptions = useSelector((state: { authorization: { departments: string[] } }) => state.authorization.departments);
+    const userOptions = useSelector((state: { authorization: { users: string[] } }) => state.authorization.users);
+    const isAuthenticated = useSelector((state: { authorization: { isAuthenticated: boolean } }) => state.authorization.isAuthenticated);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log({ department, user, password });
-        navigate('/main-view');
+        dispatch(login({ user, password }));
+        setShowError(true); // Show error if login fails
     };
+
+    React.useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/main-view');
+        }
+    }, [isAuthenticated, navigate]);
 
     return (
         <div style={{ margin: 'auto auto', width: '30%', padding: '20px', backgroundColor: '#d5f5f9', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
-            <h2>Authorization</h2>
+            <h2>Вітаємо Вас у Журналі дефектів</h2>
+            {showError && !isAuthenticated && (
+                <div style={{ color: 'red', marginBottom: '10px' }}>
+                    Невірний користувач або пароль
+                </div>
+            )}
             <form onSubmit={handleSubmit} className='form'>
                 <div className='option'>
                     <label htmlFor="department">
-                        Department
+                        РЕМ
                     </label>
                     <select
                         id="department"
@@ -30,16 +50,16 @@ const AuthorizeContainer: React.FC = () => {
                         style={{ width: '100%', padding: '8px' }}
                     >
                         <option value="" disabled>
-                            Select Department
+                            Виберіть РЕМ
                         </option>
-                        <option value="HR">HR</option>
-                        <option value="IT">IT</option>
-                        <option value="Finance">Finance</option>
+                        {departmentOptions.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
                     </select>
                 </div>
                 <div className='option'>
                     <label htmlFor="user" >
-                        User
+                        Користувач
                     </label>
                     <select
                         id="user"
@@ -47,15 +67,15 @@ const AuthorizeContainer: React.FC = () => {
                         onChange={(e) => setUser(e.target.value)}
                         style={{ width: '100%', padding: '8px' }}
                     >
-                        <option value="" disabled>Select User</option>
-                        <option value="User1">User1</option>
-                        <option value="User2">User2</option>
-                        <option value="User3">User3</option>
+                        <option value="" disabled>Виберіть користувача</option>
+                        {userOptions.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
                     </select>
                 </div>
                 <div  className='option'>
                     <label htmlFor="password">
-                        Password
+                        Пароль
                     </label>
                     <input
                         type="password"
@@ -66,7 +86,8 @@ const AuthorizeContainer: React.FC = () => {
                     />
                 </div>
                 <button type="submit" className='button'>
-                    Authorize
+                <span className='button-text'>Увійти</span>
+                <span className='button-icon'>🔑</span>
                 </button>
             </form>
         </div>
