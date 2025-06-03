@@ -5,6 +5,7 @@ import './styles/edit.scss';
 import { toast, ToastContainer } from 'react-toastify';
 import { FormData, initialFormData } from '../editPageSlice';
 import 'react-toastify/dist/ReactToastify.css';
+import CommentsModal from '../components/CommentsModal';
 
 const EditPage: React.FC = () => {
     const dispatch = useDispatch();
@@ -234,19 +235,14 @@ const EditPage: React.FC = () => {
                     </button>
                 </div>
                 {showCommentsModal && (
-                    <div className="edit-modal">
-                        <div className="edit-modal-content">
-                            <textarea
-                                name="comments"
-                                value={Array.isArray(localForm.comments) ? localForm.comments.join('\n') : ''}
-                                onChange={e => handleChange(e, 'comments')}
-                                style={{ width: '100%', minHeight: 100 }}
-                            />
-                            <div className="edit-modal-actions">
-                                <button type="button" onClick={() => setShowCommentsModal(false)}>Закрити</button>
-                            </div>
-                        </div>
-                    </div>
+                    <CommentsModal
+                        comments={localForm.comments || []}
+                        onAddComment={comment => setLocalForm(prev => ({
+                            ...prev,
+                            comments: [...(prev.comments || []), comment]
+                        }))}
+                        onClose={() => setShowCommentsModal(false)}
+                    />
                 )}
                 <button type="submit" className="edit-save-btn">
                     <span role="img" aria-label="save" style={{ marginRight: 6 }}>💾</span>
