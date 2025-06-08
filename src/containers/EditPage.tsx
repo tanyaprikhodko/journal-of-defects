@@ -1,30 +1,27 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from 'react-router-dom';
 import './styles/edit.scss';
 import { toast, ToastContainer } from 'react-toastify';
-import { FormData, initialFormData } from '../editPageSlice';
+import { useEditPageStore, useAuthStore, FormData } from '../store-zustand';
 import 'react-toastify/dist/ReactToastify.css';
 import CommentsModal from '../components/CommentsModal';
 
 const EditPage: React.FC = () => {
-    const dispatch = useDispatch();
     const { name } = useParams<{ name: string }>();
-    const form = useSelector((state: { editPage: { savedForms: { [key: string]: FormData } } }) => name ? state.editPage.savedForms[name] : initialFormData) ?? initialFormData;
-    const departmentOptions: string[] = useSelector((state: { authorization: { departments: string[] } }) => state.authorization.departments);
-    const userOptions: string[] = useSelector((state: { authorization: { users: string[] } }) => state.authorization.users);
+    const form = useEditPageStore(state => state.getForm(name || ''));
+    const setForm = useEditPageStore(state => state.setForm);
+    const departmentOptions = useAuthStore(state => state.departments);
+    const userOptions = useAuthStore(state => state.users);
     const [showCommentsModal, setShowCommentsModal] = React.useState(false);
     const navigate = useNavigate();
 
     // Use local state for the form to make it reactive
     const [localForm, setLocalForm] = React.useState<FormData>(form);
 
-    // Keep localForm in sync with store form (when switching records)
     React.useEffect(() => {
         setLocalForm(form);
     }, [form]);
 
-    // Update local state on change
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, name: string) => {
         const { value } = e.target;
         setLocalForm(prev => {
@@ -38,12 +35,10 @@ const EditPage: React.FC = () => {
         });
     };
 
-    // On submit, save localForm to store
     const handleSubmit = async(e: React.FormEvent) => {
         e.preventDefault();
         if (name) {
-            await dispatch({ type: 'editPage/saveForm', payload: { name, form: localForm } });
-            dispatch({ type: 'editPage/resetEditedForm'});
+            setForm(name, localForm);
         }
         toast.success('Збережено успішно!', { autoClose: 100 });
         setTimeout(() => navigate('/main-view'), 110);

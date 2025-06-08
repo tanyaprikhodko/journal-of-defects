@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../authorizationSlice';
+import { useAuthStore } from '../store-zustand';
 import './styles/authorization.scss';
 
 
@@ -11,17 +10,17 @@ const AuthorizeContainer: React.FC = () => {
     const [password, setPassword] = useState('');
     const [showError, setShowError] = useState(false);
     const navigate = useNavigate();
-    const dispatch = useDispatch();
 
-    // Get department and user options from Redux authorization state
-    const departmentOptions = useSelector((state: { authorization: { departments: string[] } }) => state.authorization.departments);
-    const userOptions = useSelector((state: { authorization: { users: string[] } }) => state.authorization.users);
-    const isAuthenticated = useSelector((state: { authorization: { isAuthenticated: boolean } }) => state.authorization.isAuthenticated);
+    // Zustand hooks
+    const departmentOptions = useAuthStore(state => state.departments);
+    const userOptions = useAuthStore(state => state.users);
+    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+    const login = useAuthStore(state => state.login);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        dispatch(login({ user, password }));
-        setShowError(true); // Show error if login fails
+        const success = login(user, password);
+        setShowError(!success);
     };
 
     React.useEffect(() => {

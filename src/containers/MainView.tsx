@@ -1,18 +1,14 @@
 import React from 'react';
 import Table from '../components/Table';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../authorizationSlice';
+import { useTableStore } from '../store-zustand';
 
 const MainView: React.FC = () => {
     const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const handleLogout = () => {
-        dispatch(logout());
-        navigate('/login'); 
-    }
+    // Zustand table state
+    const tableData = useTableStore(state => state.tableData);
+
     const columns = ['Name', 'Age', 'Department'];
-    const data = useSelector((state: { table: { data: { [key: string]: string }[] } }) => state.table.data);
     const clickHandler = (row: { [key: string]: string }) => {
         console.log('Row clicked:', row);
         navigate(`/edit/${row.Name}`); // Assuming 'Name' is unique and used for navigation
@@ -23,14 +19,17 @@ const MainView: React.FC = () => {
             <h1 style={{ margin: 0, padding: '10px 20px', textAlign: 'center' }}>Fixed Header with buttons</h1>
             <button 
                 style={{ margin: '10px', padding: '10px 20px', backgroundColor: '#007BFF', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                onClick={() => handleLogout()}
+                onClick={() => {
+                    // handleLogout();
+                    navigate('/login'); 
+                }}
             >
                 Logout
             </button>
         </div>
         <div style={{ paddingTop: '32px', padding: '20px', backgroundColor: '#f9f9f9', height: '100vh' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                <Table columns={columns} data={data} click={clickHandler }/>
+                <Table columns={columns} data={tableData} click={clickHandler }/>
             </div>
         </div>
     </>

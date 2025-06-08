@@ -1,5 +1,4 @@
 import AuthorizeContainer from './containers/AuthorizeContainer'
-// import MainView from './containers/MainView'
 import './App.css'
 
 function App() {
