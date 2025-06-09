@@ -61,29 +61,64 @@ export const useEditPageStore = create<EditPageState>((set, get) => ({
 }));
 
 interface AuthState {
-  departments: string[];
-  users: string[];
+  departments: Array<{
+      id: string;
+      name: string;
+    }>;
+  users: Array<{
+      id: number;
+      name: string;
+      login: string;
+      rank: string;
+    }>
   isAuthenticated: boolean;
   currentUser: string | null;
   login: (user: string, password: string) => boolean;
   logout: () => void;
   setDepartments: (departments: string[]) => void;
   setUsers: (users: string[]) => void;
+  fetchUsers: () => Promise<void>;
+  fetchDepartments: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  departments: ['Відділ 1', 'Відділ 2'],
-  users: ['User 1', 'User 2'],
+  departments: [],
+  users: [],
   isAuthenticated: false,
   currentUser: null,
   login: (user, password) => {
-    // Example: always succeed
     set({ isAuthenticated: true, currentUser: user });
     return true;
   },
   logout: () => set({ isAuthenticated: false, currentUser: null }),
   setDepartments: (departments) => set({ departments }),
   setUsers: (users) => set({ users }),
+  fetchUsers: async () => {
+    try {
+      const response = await fetch('http://localhost:5188/api/Users');
+      if (!response.ok) throw new Error('Failed to fetch users');
+      let users = await response.json();
+      if (Array.isArray(users)) {
+        users = users.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      set({ users });
+    } catch {
+      set({ users: [] });
+    }
+  },
+  fetchDepartments: async () => {
+    try {
+      const response = await fetch('http://localhost:5188/api/Lookups/regions');
+      if (!response.ok) throw new Error('Failed to fetch departments');
+      let departments = await response.json();
+      if (Array.isArray(departments)) {
+        departments = departments.sort((a, b) => a.localeCompare(b));
+      }
+      set({ departments });
+    } catch {
+      set({ departments: [] });
+    }
+  },
 }));
 
 interface TableState {

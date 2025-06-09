@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store-zustand';
 import './styles/authorization.scss';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
 
 
 const AuthorizeContainer: React.FC = () => {
-    const [department, setDepartment] = useState('');
+    const [department, setDepartment] = useState<{ id: string; name: string } | null>(null);
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
     const [showError, setShowError] = useState(false);
@@ -14,8 +16,16 @@ const AuthorizeContainer: React.FC = () => {
     // Zustand hooks
     const departmentOptions = useAuthStore(state => state.departments);
     const userOptions = useAuthStore(state => state.users);
+    console.log(userOptions)
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
     const login = useAuthStore(state => state.login);
+    const fetchUsers = useAuthStore(state => state.fetchUsers);
+    const fetchDepartments = useAuthStore(state => state.fetchDepartments);
+
+    React.useEffect(() => {
+        fetchUsers();
+        fetchDepartments();
+    }, [fetchUsers, fetchDepartments]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,35 +52,51 @@ const AuthorizeContainer: React.FC = () => {
                     <label htmlFor="department">
                         РЕМ
                     </label>
-                    <select
+                    <Autocomplete
                         id="department"
+                        style={{ width: '100%' }}
+                        options={departmentOptions}
                         value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
-                        style={{ width: '100%', padding: '8px' }}
-                    >
-                        <option value="" disabled>
-                            Виберіть РЕМ
-                        </option>
-                        {departmentOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                        ))}
-                    </select>
+                        onChange={(_, newValue) => setDepartment(newValue)}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Виберіть РЕМ"
+                                variant="outlined"
+                                size="small"
+                                style={{ width: '100%' }}
+                            />
+                        )}
+                        freeSolo={false}
+                    />
                 </div>
                 <div className='option'>
                     <label htmlFor="user" >
                         Користувач
                     </label>
-                    <select
+                    <Autocomplete
                         id="user"
-                        value={user}
-                        onChange={(e) => setUser(e.target.value)}
-                        style={{ width: '100%', padding: '8px' }}
-                    >
-                        <option value="" disabled>Виберіть користувача</option>
-                        {userOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                        ))}
-                    </select>
+                        style={{ width: '100%' }}
+                        options={userOptions}
+                        getOptionLabel={(option) => option.name}
+                        value={userOptions.find(u => u.login === user) || null}
+                        onChange={(_, newValue) => setUser(newValue ? newValue.login : '')}
+                        renderOption={(props, option) => (
+                          <li {...props} key={option.id}>
+                            {option.name}
+                          </li>
+                        )}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Виберіть користувача"
+                                variant="outlined"
+                                size="small"
+                                style={{ width: '100%' }}
+                            />
+                        )}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                    />
                 </div>
                 <div  className='option'>
                     <label htmlFor="password">
