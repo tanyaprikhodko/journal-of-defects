@@ -60,78 +60,58 @@ export const useEditPageStore = create<EditPageState>((set, get) => ({
   getForm: (name) => get().savedForms[name] || initialFormData,
 }));
 
-interface AuthState {
-  departments: Array<{
-      id: string;
-      name: string;
-    }>;
-  users: Array<{
-      id: number;
-      name: string;
-      login: string;
-      rank: string;
-    }>
-  isAuthenticated: boolean;
-  currentUser: string | null;
-  login: (user: string, password: string) => boolean;
-  logout: () => void;
-  setDepartments: (departments: string[]) => void;
-  setUsers: (users: string[]) => void;
-  fetchUsers: () => Promise<void>;
-  fetchDepartments: () => Promise<void>;
+interface Person {
+  id: number;
+  name: string;
+  login: string;
+  rank: string;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  departments: [],
-  users: [],
-  isAuthenticated: false,
-  currentUser: null,
-  login: (user, password) => {
-    set({ isAuthenticated: true, currentUser: user });
-    return true;
-  },
-  logout: () => set({ isAuthenticated: false, currentUser: null }),
-  setDepartments: (departments) => set({ departments }),
-  setUsers: (users) => set({ users }),
-  fetchUsers: async () => {
-    try {
-      const response = await fetch('http://localhost:5188/api/Users');
-      if (!response.ok) throw new Error('Failed to fetch users');
-      let users = await response.json();
-      if (Array.isArray(users)) {
-        users = users.sort((a, b) => a.name.localeCompare(b.name));
-      }
-      set({ users });
-    } catch {
-      set({ users: [] });
-    }
-  },
-  fetchDepartments: async () => {
-    try {
-      const response = await fetch('http://localhost:5188/api/Lookups/regions');
-      if (!response.ok) throw new Error('Failed to fetch departments');
-      let departments = await response.json();
-      if (Array.isArray(departments)) {
-        departments = departments.sort((a, b) => a.localeCompare(b));
-      }
-      set({ departments });
-    } catch {
-      set({ departments: [] });
-    }
-  },
-}));
+export interface TableRow {
+  id: number;
+  condition: string;
+  substation: string;
+  order: number;
+  substationRegion: string;
+  substationRegionId: string;
+  registrationDate: string;
+  objectType: string;
+  objectNumber: number | null;
+  place: string;
+  connection: string;
+  description: string;
+  messageAuthor: Person;
+  responsible: Person;
+  completionTerm: string;
+  technicalManager: Person;
+  acceptionDate: string;
+  acceptedBy: Person;
+  completionDate: string;
+  completedBy: Person;
+  confirmedBy: Person;
+  confirmationDate: string;
+}
 
 interface TableState {
-  tableData: any[];
-  setTableData: (data: any[]) => void;
+  tableData: TableRow[];
+  setTableData: (data: TableRow[]) => void;
+  fetchTableData: () => Promise<void>;
 }
 
 export const useTableStore = create<TableState>((set) => ({
-  tableData: [
-    { Name: 'John Doe', Age: '30', Department: 'HR' },
-    { Name: 'Jane Smith', Age: '25', Department: 'IT' },
-    { Name: 'Sam Johnson', Age: '35', Department: 'Finance' },
-    { Name: 'Alice Brown', Age: '28', Department: 'Marketing' },
-  ],
+  tableData: [],
   setTableData: (data) => set({ tableData: data }),
+  fetchTableData: async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5188/api/Journals', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to fetch table data');
+      const data = await response.json();
+      set({ tableData: data.journals });
+    } catch {
+      set({ tableData: [] });
+    }
+  },
 }));

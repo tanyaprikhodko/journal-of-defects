@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store-zustand';
+import { useAuthStore } from '../store-auth';
 import './styles/authorization.scss';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 
+type Department = {
+    id: string;
+    name: string;
+};
+
 
 const AuthorizeContainer: React.FC = () => {
-    const [department, setDepartment] = useState<{ id: string; name: string } | null>(null);
+    const [department, setDepartment] = useState<Department | null>(null);
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
     const [showError, setShowError] = useState(false);
@@ -16,20 +21,19 @@ const AuthorizeContainer: React.FC = () => {
     // Zustand hooks
     const departmentOptions = useAuthStore(state => state.departments);
     const userOptions = useAuthStore(state => state.users);
-    console.log(userOptions)
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-    const login = useAuthStore(state => state.login);
-    const fetchUsers = useAuthStore(state => state.fetchUsers);
+    const loginAsync = useAuthStore(state => state.loginAsync);
     const fetchDepartments = useAuthStore(state => state.fetchDepartments);
+    const fetchUsers = useAuthStore(state => state.fetchUsers);
 
     React.useEffect(() => {
-        fetchUsers();
         fetchDepartments();
-    }, [fetchUsers, fetchDepartments]);
+    }, [fetchDepartments]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const success = login(user, password);
+        setShowError(false);
+        const success = await loginAsync(user, password);
         setShowError(!success);
     };
 
@@ -56,8 +60,12 @@ const AuthorizeContainer: React.FC = () => {
                         id="department"
                         style={{ width: '100%' }}
                         options={departmentOptions}
+                        getOptionLabel={(option) => option.name}
                         value={department}
-                        onChange={(_, newValue) => setDepartment(newValue)}
+                        onChange={(_, newValue) => {
+                            setDepartment(newValue);
+                            if (newValue) fetchUsers(newValue.id);
+                        }}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -81,6 +89,7 @@ const AuthorizeContainer: React.FC = () => {
                         getOptionLabel={(option) => option.name}
                         value={userOptions.find(u => u.login === user) || null}
                         onChange={(_, newValue) => setUser(newValue ? newValue.login : '')}
+                        disabled={!department}
                         renderOption={(props, option) => (
                           <li {...props} key={option.id}>
                             {option.name}

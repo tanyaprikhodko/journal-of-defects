@@ -8,8 +8,7 @@ import EditPage from './containers/EditPage'; // Assuming you have an EditPage c
 
 const isAuthenticated = () => {
     // Replace this with your actual authentication logic
-    // return !!localStorage.getItem('authToken');
-    return true;
+    return localStorage.getItem('accessToken') !== null;
 };
 
 const EditNameRoute: React.FC = () => {
