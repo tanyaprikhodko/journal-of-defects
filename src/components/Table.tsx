@@ -8,19 +8,19 @@ import {
 import { TableRow } from '../store-zustand';
 
 interface TableProps {
-  columns: string[];
+  columns: Array<{key: string; label: string}>;
   data: TableRow[];
-  click?: (row: TableRow) => void;
+  click?: (id: number) => void;
 }
 
 const Table: React.FC<TableProps> = ({ columns, data, click }) => {
-  // Build column definitions for TanStack Table
   const columnDefs = React.useMemo<ColumnDef<TableRow>[]>(
     () =>
       columns.map((col) => ({
-        accessorKey: col,
-        header: col,
+        accessorKey: String(col.key),
+        header: col.label,
         cell: info => info.getValue(),
+        enableResizing: true,
       })),
     [columns]
   );
@@ -29,10 +29,12 @@ const Table: React.FC<TableProps> = ({ columns, data, click }) => {
     data,
     columns: columnDefs,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
   });
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <table style={{borderCollapse: 'collapse', width: '100%'}}>
       <thead>
         {table.getHeaderGroups().map(headerGroup => (
           <tr key={headerGroup.id}>
@@ -44,9 +46,47 @@ const Table: React.FC<TableProps> = ({ columns, data, click }) => {
                   padding: '8px',
                   textAlign: 'left',
                   backgroundColor: '#f2f2f2',
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 1,
+                  minWidth: 40,
+                  maxWidth: 600,
+                  userSelect: 'none',
                 }}
               >
-                {flexRender(header.column.columnDef.header, header.getContext())}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: header.getSize(),
+                    minWidth: 40,
+                    maxWidth: 600,
+                    position: 'relative',
+                  }}
+                >
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getCanResize() && (
+                    <div
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                      style={{
+                      cursor: 'col-resize',
+                      userSelect: 'none',
+                      width: 6,
+                      height: 24,
+                      background: header.column.getIsResizing() ? '#007BFF' : '#ccc',
+                      marginLeft: 4,
+                      borderRadius: 3,
+                      flexShrink: 0,
+                      position: 'absolute',
+                      right: 0,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 2,
+                      }}
+                    />
+                    )}
+                </div>
               </th>
             ))}
           </tr>
@@ -61,18 +101,18 @@ const Table: React.FC<TableProps> = ({ columns, data, click }) => {
           </tr>
         ) : (
           table.getRowModel().rows.map(row => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell, colIndex) => (
+            <tr
+              key={row.id}
+              style={click ? { cursor: 'pointer' } : {}}
+              onClick={click ? () => click(row.original.id) : undefined}
+            >
+              {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
                   style={{
                     border: '1px solid #ddd',
                     padding: '8px',
-                    cursor: colIndex === 0 && click ? 'pointer' : undefined,
-                    color: colIndex === 0 && click ? '#007BFF' : undefined,
-                    textDecoration: colIndex === 0 && click ? 'underline' : undefined,
                   }}
-                  onClick={colIndex === 0 && click ? () => click(row.original) : undefined}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>

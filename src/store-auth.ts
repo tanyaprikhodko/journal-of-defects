@@ -46,6 +46,25 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (refreshToken) {
           localStorage.setItem('refreshToken', refreshToken);
         }
+        const parseJwt = (token: string) => {
+          try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(
+              atob(base64)
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+            );
+            return JSON.parse(jsonPayload);
+          } catch {
+            return null;
+          }
+        };
+
+        console.log('Parsed JWT:', parseJwt(accessToken), user);
+
+        // const userInfo = accessToken ? parseJwt(accessToken) : null;
         set({ isAuthenticated: true, currentUser: user });
         return true;
       } else {
@@ -94,33 +113,35 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   refreshTokenAsync: async () => {
-    try {
-      const response = await fetch('http://localhost:5188/api/Authentication/refresh-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const { accessToken, refreshToken } = await response.json();
-        if (accessToken) {
-          localStorage.setItem('accessToken', accessToken);
-          set({ isAuthenticated: true });
-        }
-        if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
-        }
-        return true;
-      } else {
-        set({ isAuthenticated: false, currentUser: null });
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        return false;
-      }
-    } catch {
-      set({ isAuthenticated: false, currentUser: null });
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      return false;
-    }
+    console.log('Refreshing token...');
+    return true
+    // try {
+    //   const response = await fetch('http://localhost:5188/api/Authentication/refresh-token', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     credentials: 'include'
+    //   });
+    //   if (response.ok) {
+    //     const { accessToken, refreshToken } = await response.json();
+    //     if (accessToken) {
+    //       localStorage.setItem('accessToken', accessToken);
+    //       set({ isAuthenticated: true });
+    //     }
+    //     if (refreshToken) {
+    //       localStorage.setItem('refreshToken', refreshToken);
+    //     }
+    //     return true;
+    //   } else {
+    //     set({ isAuthenticated: false, currentUser: null });
+    //     localStorage.removeItem('accessToken');
+    //     localStorage.removeItem('refreshToken');
+    //     return false;
+    //   }
+    // } catch {
+    //   set({ isAuthenticated: false, currentUser: null });
+    //   localStorage.removeItem('accessToken');
+    //   localStorage.removeItem('refreshToken');
+    //   return false;
+    // }
   },
 }));

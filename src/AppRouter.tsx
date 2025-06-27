@@ -3,18 +3,12 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import AuthorizeContainer from './containers/AuthorizeContainer';   
 import MainView from './containers/MainView';
 import NotFoundPage from './containers/NotFoundPage';
-import { useParams } from 'react-router-dom';
 import EditPage from './containers/EditPage'; // Assuming you have an EditPage component
 
 const isAuthenticated = () => {
     // Replace this with your actual authentication logic
     return localStorage.getItem('accessToken') !== null;
 };
-
-const EditNameRoute: React.FC = () => {
-    const { name } = useParams<{ name: string }>();
-    return <EditPage name={name} />;
-}
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return isAuthenticated() ? children : <Navigate to="/login" />;
@@ -42,10 +36,10 @@ const AppRouter: React.FC = () => {
                     }
                 />
                 <Route
-                    path="/edit/:name"
+                    path="/edit/:id"
                     element={
                         <PrivateRoute>
-                            <EditNameRoute />
+                            <EditPage />
                         </PrivateRoute>
                     }
                 />
