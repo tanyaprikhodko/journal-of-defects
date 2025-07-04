@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { parseJwt } from './utils';
 
 // export interface FormData {
 //   defectState: string;
@@ -92,7 +93,7 @@ export interface TableRow {
   id: number;
   condition: string;
   substation: string;
-  order: number;
+  order: number | string;
   substationRegion: string;
   substationRegionId: string;
   registrationDate: string;
@@ -116,20 +117,36 @@ export interface TableRow {
 export interface TableState {
   tableData: TableRow[];
   tableDataById: Record<number, TableRow>;
-  setTableData: (data: TableRow[]) => void;
-  fetchTableData: () => Promise<void>;
+  totalPages?: number;
+  currentPage?: number;
+  commentsById?: Record<number, any[]>; // Assuming comments are an array of objects
+  objectTypes: Array<{ id: number; type: string }>;
+  lookupPlaces?: Array<{ id: number; name: string }>;
+  usersByRegionId?: Record<string, Person[]>;
+  fetchTableData: (page?: number) => Promise<void>;
   fetchTableDataById: (id: number) => Promise<void>;
+  getCommentsById: (id: number) => Promise<void>;
+  addComment: (journalId: number, comment: string) => Promise<void>;
+  fetchObjectTypes: () => Promise<void>;
+  fetchLookupPlaces: () => Promise<void>;
+  fetchUsersByRegionId: (regionId: string) => Promise<void>;
 }
 
 export const useTableStore = create<TableState>((set, get) => ({
   tableData: [],
   tableDataById: {},
-  setTableData: (data) => set({ tableData: data }),
-  fetchTableData: async () => {
+  objectTypes: [],
+  lookupPlaces: [],
+  usersByRegionId: {},
+  fetchTableData: async (page?: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:5188/api/Journals', {
+      const params = new URLSearchParams({
+        page: page ? page.toString() : get().currentPage?.toString() || '1',
+      });
+      const response = await fetch(`http://localhost:5188/api/Journals?${params.toString()}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        method: 'GET'
       });
       if (!response.ok) throw new Error('Failed to fetch table data');
       const data = await response.json();
@@ -139,6 +156,8 @@ export const useTableStore = create<TableState>((set, get) => ({
         acc[row.id] = row;
         return acc;
       }, {})});
+      set({ totalPages: data.totalPages, currentPage: data.currentPage });
+      console.log('Table data fetched successfully:', data.journals);
     } catch(error) {
       console.error('Error fetching table data:', error);
       set({ tableData: [] });
@@ -160,6 +179,93 @@ fetchTableDataById: async (id: number) => {
     } catch {
       // Optionally handle error
     }
-  }
+  },
 
+  getCommentsById: async (id: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5188/api/Journals/${id }/comments`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+      if (!response.ok) throw new Error('Failed to fetch comments');
+      const comments = await response.json();
+      set(state => ({
+        commentsById: { ...state.commentsById, [id]: comments }
+      }));
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      set(state => ({
+        commentsById: { ...state.commentsById, [id]: [] }
+      }));
+    }
+  },
+
+  addComment: async (journalId: number, comment: string) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const user = parseJwt(token || '');
+      console.log('Parsed user from token:', user);
+      if (!user?.nameidentifier) throw new Error('User not found');
+      const response = await fetch(`http://localhost:5188/api/Comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ comment, authorId: user.nameidentifier, journalId })
+      });
+      if (!response.ok) throw new Error('Failed to post comment');
+      const newComment = await response.json();
+      set(state => ({
+        commentsById: { ...state.commentsById, [journalId]: [...(state.commentsById?.[journalId] || []), newComment] }
+      }));
+    } catch (error) {
+      console.error('Error posting comment:', error);
+    }
+  },
+
+  fetchObjectTypes: async () => {
+    try{
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5188/api/Lookups/objectTypes', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to fetch object types');
+      const data = await response.json();
+      set({ objectTypes: data });
+    } catch (error) {
+      console.error('Error fetching object types:', error);
+    }
+  },
+
+  fetchLookupPlaces: async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5188/api/Lookups/places', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to fetch lookup places');
+      const data = await response.json();
+      set({ lookupPlaces: data });
+    } catch (error) {
+      console.error('Error fetching lookup places:', error);
+    }
+  },
+
+  fetchUsersByRegionId: async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const regionId = localStorage.getItem('departmentId');
+      const response = await fetch(`http://localhost:5188/api/Users?regionId=${regionId}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to fetch users by region ID');
+      const data = await response.json();
+      set({ usersByRegionId: {
+        ...get().usersByRegionId,
+        [regionId as string]: data
+      } });
+    } catch (error) {
+      console.error('Error fetching users by region ID:', error);
+      set({ usersByRegionId: {} });
+    }
+  }
 }));

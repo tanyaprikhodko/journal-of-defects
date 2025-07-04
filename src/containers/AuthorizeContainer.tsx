@@ -33,7 +33,8 @@ const AuthorizeContainer: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setShowError(false);
-        const success = await loginAsync(user, password);
+        if (!department) return;
+        const success = await loginAsync(user, password, department.id);
         setShowError(!success);
     };
 

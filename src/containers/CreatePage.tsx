@@ -12,22 +12,15 @@ import { TABLE_COLUMNS } from '../constants/tableColumns';
 const EditPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const fetchTableDataById = useTableStore(state => state.fetchTableDataById);
+    const departmentOptions = useAuthStore(state => state.departments);
     const userOptions = useAuthStore(state => state.users);
-    const objectTypes = useTableStore(state => state.objectTypes);
-    const lookupPlaces = useTableStore(state => state.lookupPlaces);
     const [showCommentsModal, setShowCommentsModal] = React.useState(false);
-    const getCommentsById = useTableStore(state => state.getCommentsById);
     const navigate = useNavigate();
-    const addComment = useTableStore(state => state.addComment);
-    const fetchObjectTypes = useTableStore(state => state.fetchObjectTypes);
-    const fetchLookupPlaces = useTableStore(state => state.fetchLookupPlaces);
 
     const [form, setForm] = React.useState<TableRow>({} as TableRow);
 
     React.useEffect(() => {
         if (id) fetchTableDataById(Number(id));
-        fetchObjectTypes();
-        fetchLookupPlaces();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
@@ -39,11 +32,6 @@ const EditPage: React.FC = () => {
         console.log('Fetched data for ID:', id, fetched);
         setForm(fetched ?? ({} as TableRow));
     }, [id, tableDataById]);
-
-console.log('Form state:', form);
-    React.useEffect(() => {
-      getCommentsById(Number(id));
-    }, [getCommentsById, id]);
 
     const handleSubmit = async(e: React.FormEvent) => {
         e.preventDefault();
@@ -96,14 +84,11 @@ console.log('Form state:', form);
                 {/* defectState: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE}</label>
-                    <select name="defectState" onChange={e => handleChange(e, 'defectState')} style={{ flex: 1 }}>
-                        <option value={form.condition || ''}>{form.condition || 'Оберіть стан'}</option>
-                        <option value="Внесений">Внесений</option>
-                        <option value="Розглянутий технічним керівником">Розглянутий технічним керівником</option>
-                        <option value="Прийнятий до виконання">Прийнятий до виконання</option>
-                        <option value="Усунутий">Усунутий</option>
-                        <option value="Протермінований">Протермінований</option>
-                        <option value="Прийнятий в експлуатацію">Прийнятий в експлуатацію</option>
+                    <select name="defectState" value={form.condition || ''} onChange={e => handleChange(e, 'defectState')} style={{ flex: 1 }}>
+                        <option value="">Оберіть стан</option>
+                        <option value="open">Відкрито</option>
+                        <option value="in_progress">В роботі</option>
+                        <option value="closed">Закрито</option>
                     </select>
                 </div>
                 {/* number: number input */}
@@ -118,17 +103,17 @@ console.log('Form state:', form);
                 </div>
                 {/* object: select */}
                 <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.OBJECT_EDIT}</label>
-                    <select name="object" onChange={e => handleChange(e, 'object')} style={{ flex: 1 }}>
-                        <option value={form.objectType || ''} >{form.objectType || 'Оберіть об\'єкт'}</option>
-                        {objectTypes.map(option => (
-                            <option key={option.id} value={option.id}>{option.type}</option>
+                    <label className="edit-label">{TABLE_COLUMNS.OBJECT}</label>
+                    <select name="object" value={form.objectType || ''} onChange={e => handleChange(e, 'object')} style={{ flex: 1 }}>
+                        <option value="">Оберіть об'єкт</option>
+                        {departmentOptions.map(option => (
+                            <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
                     </select>
                 </div>
                 {/* substation: select */}
                 <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.SUBSTATION_EDIT}</label>
+                    <label className="edit-label">{TABLE_COLUMNS.SUBSTATION}</label>
                     <select name="substation" value={form.substation || ''} onChange={e => handleChange(e, 'substation')} style={{ flex: 1 }}>
                         <option value="">Оберіть підстанцію</option>
                         <option value="ps1">ПС 1</option>
@@ -139,10 +124,9 @@ console.log('Form state:', form);
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.PLACE_OF_DEFECT}</label>
                     <select name="placeOfDefect" value={form.place || ''} onChange={e => handleChange(e, 'placeOfDefect')} style={{ flex: 1 }}>
-                       <option value={form.place || ''} >{form.place || 'Оберіть місце'}</option>
-                        {lookupPlaces?.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
-                        ))}
+                        <option value="">Оберіть місце</option>
+                        <option value="place1">Місце 1</option>
+                        <option value="place2">Місце 2</option>
                     </select>
                 </div>
                 {/* connection: text input */}
@@ -158,8 +142,8 @@ console.log('Form state:', form);
                 {/* author: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.AUTHOR}</label>
-                    <select name="author" onChange={e => handleChange(e, 'author')} style={{ flex: 1 }}>
-                        <option value={form.messageAuthor?.name || ''} >{form.messageAuthor?.name || 'Оберіть автора'}</option>
+                    <select name="author" value={form.messageAuthor?.name || ''} onChange={e => handleChange(e, 'author')} style={{ flex: 1 }}>
+                        <option value="">Оберіть автора</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
@@ -168,8 +152,8 @@ console.log('Form state:', form);
                 {/* techLead: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.TECH_LEAD}</label>
-                    <select name="techLead"  onChange={e => handleChange(e, 'techLead')} style={{ flex: 1 }}>
-                        <option value={form.technicalManager?.name || ''}>{form.technicalManager?.name || 'Оберіть керівника'}</option>
+                    <select name="techLead" value={form.technicalManager?.name || ''} onChange={e => handleChange(e, 'techLead')} style={{ flex: 1 }}>
+                        <option value="">Оберіть керівника</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
@@ -179,7 +163,7 @@ console.log('Form state:', form);
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.RESPONSIBLE_FOR_ELIMINATION}</label>
                     <select name="responsibleRorElimination" value={form.responsible?.name || ''} onChange={e => handleChange(e, 'responsibleRorElimination')} style={{ flex: 1 }}>
-                        <option value={form.responsible?.name || ''}>{form.responsible?.name || 'Оберіть відповідального'}</option>
+                        <option value="">Оберіть відповідального</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
@@ -198,8 +182,8 @@ console.log('Form state:', form);
                 {/* acceptedPerson: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_PERSON}</label>
-                    <select name="acceptedPerson" onChange={e => handleChange(e, 'acceptedPerson')} style={{ flex: 1 }}>
-                        <option value={form.acceptedBy?.name || ''}>{form.acceptedBy?.name || 'Оберіть особу'}</option>
+                    <select name="acceptedPerson" value={form.acceptedBy?.name || ''} onChange={e => handleChange(e, 'acceptedPerson')} style={{ flex: 1 }}>
+                        <option value="">Оберіть особу</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
@@ -213,8 +197,8 @@ console.log('Form state:', form);
                 {/* eliminated: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ELIMINATED}</label>
-                    <select name="eliminated"  onChange={e => handleChange(e, 'eliminated')} style={{ flex: 1 }}>
-                        <option value={form.completedBy?.name || ''}>{form.completedBy?.name || 'Оберіть особу'}</option>
+                    <select name="eliminated" value={form.completedBy?.name || ''} onChange={e => handleChange(e, 'eliminated')} style={{ flex: 1 }}>
+                        <option value="">Оберіть особу</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
@@ -228,8 +212,8 @@ console.log('Form state:', form);
                 {/* acceptedExploitationPerson: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON}</label>
-                    <select name="acceptedExploitationPerson" onChange={e => handleChange(e, 'acceptedExploitationPerson')} style={{ flex: 1 }}>
-                        <option value={form.acceptedBy?.name || ''}>{form.acceptedBy?.name || 'Оберіть особу'}</option>
+                    <select name="acceptedExploitationPerson" value={form.acceptedBy?.name || ''} onChange={e => handleChange(e, 'acceptedExploitationPerson')} style={{ flex: 1 }}>
+                        <option value="">Оберіть особу</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
@@ -252,13 +236,16 @@ console.log('Form state:', form);
                         <span>Коментарі</span>
                     </button>
                 </div>
-                {showCommentsModal && (
+                {/* {showCommentsModal && (
                     <CommentsModal
-                        journalId={form.id}
-                        onAddComment={(comment) => addComment(form.id, comment)}
+                        comments={form.comments || []}
+                        onAddComment={comment => setForm((prev: any) => ({
+                            ...prev,
+                            comments: [...(prev.comments || []), comment]
+                        }))}
                         onClose={() => setShowCommentsModal(false)}
                     />
-                )}
+                )} */}
                 <button type="submit" className="edit-save-btn">
                     <span role="img" aria-label="save" style={{ marginRight: 6 }}>💾</span>
                     Зберегти

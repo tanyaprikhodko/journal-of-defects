@@ -17,7 +17,7 @@ export interface AuthState {
   users: AuthUser[];
   isAuthenticated: boolean;
   currentUser: string | null;
-  loginAsync: (user: string, password: string) => Promise<boolean>;
+  loginAsync: (user: string, password: string, departmentId: string) => Promise<boolean>;
   logout: () => void;
   setDepartments: (departments: Department[]) => void;
   setUsers: (users: AuthUser[]) => void;
@@ -27,11 +27,11 @@ export interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  departments: [{ id: '1', name: 'Відділ 1' }, { id: '2', name: 'Відділ 2' }],
+  departments: [],
   users: [],
   isAuthenticated: false,
   currentUser: null,
-  loginAsync: async (user, password) => {
+  loginAsync: async (user, password, departmentId) => {
     try {
       const response = await fetch('http://localhost:5188/api/Authentication/login', {
         method: 'POST',
@@ -40,6 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
       if (response.ok) {
         const { accessToken, refreshToken } = await response.json();
+        localStorage.setItem('departmentId', departmentId);
         if (accessToken) {
           localStorage.setItem('accessToken', accessToken);
         }
@@ -79,6 +80,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('departmentId');
     set({ isAuthenticated: false, currentUser: null });
   },
   setDepartments: (departments) => set({ departments }),

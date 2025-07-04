@@ -1,15 +1,17 @@
 import React from "react";
 import './styles/comments.scss';
+import { useTableStore } from "../store-zustand";
 
 interface EditModalProps {
-  comments: string[];
+  journalId: number;
   onAddComment: (comment: string) => void;
   onClose: () => void;
 }
 
-const EditModal: React.FC<EditModalProps> = ({ comments, onAddComment, onClose }) => {
+const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose }) => {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-
+  const comments = useTableStore(state => state?.commentsById?.[journalId] || []);
+console.log('Comments for journalId', journalId, comments);
   return (
     <div className="edit-modal">
       <div className="edit-modal-content">
@@ -32,8 +34,14 @@ const EditModal: React.FC<EditModalProps> = ({ comments, onAddComment, onClose }
           <div className="edit-comments-list">
             {comments && comments.length > 0 ? (
               <div>
-                {comments.map((comment, idx) => (
-                  <div key={idx} className="edit-comment-item">{comment}</div>
+                {comments.map(comment => (
+                  <div key={comment.id} className="edit-comment-item">
+                    <div className="edit-comment-author">
+                      <span className="edit-comment-author-name">{comment.authorName}</span>
+                      <span className="edit-comment-author-date">{new Date(comment.creationDate).toLocaleDateString()}</span>
+                    </div>
+                  <div>{comment.body}</div>
+                  </div>
                 ))}
               </div>
             ) : (
