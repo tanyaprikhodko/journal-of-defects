@@ -11,6 +11,9 @@ import { TABLE_COLUMNS } from '../constants/tableColumns';
 
 const EditPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const isEditMode = window.location.pathname.includes('edit');
+    const isCreateMode = window.location.pathname.includes('create');
+    const isCopyMode = window.location.pathname.includes('create-copy');
     const fetchTableDataById = useTableStore(state => state.fetchTableDataById);
     const userOptions = useAuthStore(state => state.users);
     const objectTypes = useTableStore(state => state.objectTypes);

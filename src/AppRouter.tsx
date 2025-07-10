@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import AuthorizeContainer from './containers/AuthorizeContainer';   
 import MainView from './containers/MainView';
 import NotFoundPage from './containers/NotFoundPage';
-import EditPage from './containers/EditPage'; // Assuming you have an EditPage component
+import EditPage from './containers/EditPage';
+import DeletePage from './containers/DeletePage';
 
 const isAuthenticated = () => {
     // Replace this with your actual authentication logic
@@ -37,6 +38,22 @@ const AppRouter: React.FC = () => {
                 />
                 <Route
                     path="/edit/:id"
+                    element={
+                        <PrivateRoute>
+                            <EditPage />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/create/:id"
+                    element={
+                        <PrivateRoute>
+                            <EditPage />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/create-copy/:id"
                     element={
                         <PrivateRoute>
                             <EditPage />

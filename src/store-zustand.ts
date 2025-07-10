@@ -130,6 +130,7 @@ export interface TableState {
   fetchObjectTypes: () => Promise<void>;
   fetchLookupPlaces: () => Promise<void>;
   fetchUsersByRegionId: (regionId: string) => Promise<void>;
+  deleteJournal: (id: number) => Promise<void>;
 }
 
 export const useTableStore = create<TableState>((set, get) => ({
@@ -266,6 +267,22 @@ fetchTableDataById: async (id: number) => {
     } catch (error) {
       console.error('Error fetching users by region ID:', error);
       set({ usersByRegionId: {} });
+    }
+  },
+
+  deleteJournal: async (id: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5188/api/Journals/${id}`, {
+        method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to delete journal');
+      // Optionally refresh table data after deletion
+      await get().fetchTableData(get().currentPage);
+    } catch (error) {
+      console.error('Error deleting journal:', error);
+      throw error;
     }
   }
 }));

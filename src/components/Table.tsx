@@ -11,10 +11,11 @@ import { TABLE_ITEM_CONDITIONS } from '../constants/tableColumns';
 interface TableProps {
   columns: Array<{key: string; label: string}>;
   data: Array<TableRow>;
+  activeRowId?: number | null;
   click?: (id: number) => void;
 }
 
-const Table: React.FC<TableProps> = ({ columns, data, click }) => {
+const Table: React.FC<TableProps> = ({ columns, data, click, activeRowId }) => {
   const columnDefs = React.useMemo<ColumnDef<TableRow>[]>(
     () =>
       columns.map((col) => ({
@@ -82,20 +83,23 @@ const Table: React.FC<TableProps> = ({ columns, data, click }) => {
           table.getRowModel().rows.map(row => (
             <tr
               key={row.id}
-              style={click ? { cursor: 'pointer', backgroundColor: TABLE_ITEM_CONDITIONS[row?.original?.condition as keyof typeof TABLE_ITEM_CONDITIONS] } : {}}
+              style={click ? {
+                 cursor: 'pointer',
+                 backgroundColor: TABLE_ITEM_CONDITIONS[row?.original?.condition as keyof typeof TABLE_ITEM_CONDITIONS],
+              } : {}}
               onClick={click ? () => click(row.original.id) : undefined}
             >
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
                   style={{
-                    border: '1px solid #000',
-                    padding: '4px 8px',
-                    textAlign: 'left',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                    color: '#000',
+                  border: '1px solid #000',
+                  padding: '4px 8px',
+                  textAlign: 'left',
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  color: activeRowId === row.original.id ? '#888888' : '#000',
                   }}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -5,6 +5,8 @@ import { useTableStore } from '../store-zustand';
 import { useAuthStore } from '../store-auth';
 import { TABLE_COLUMNS } from '../constants/tableColumns';
 import { TableRow } from '../types/table';
+import DeleteConfirmation from '../components/DeleteConformation';
+import '../containers/styles/mainView.scss';
 
 const MainView: React.FC = () => {
   const tableColumns = [
@@ -33,7 +35,13 @@ const MainView: React.FC = () => {
   const totalPages = useTableStore(state => state.totalPages);
   const currentPage = useTableStore(state => state.currentPage);
   const fetchTableData = useTableStore(state => state.fetchTableData);
+  const deleteJournal = useTableStore(state => state.deleteJournal);
   const logout = useAuthStore(state => state.logout);
+
+  const [actionToNavigate, setActionToNavigate] = React.useState<string>('');
+  const [selectedJournalId, setSelectedJournalId] = React.useState<number | null>(null);
+
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
   const preparedTableData: Array<TableRow> = React.useMemo(() => {
     return tableData.map(item => {
@@ -60,7 +68,17 @@ const MainView: React.FC = () => {
   }, [fetchTableData]);
 
   const clickHandler = (id: number) => {
-    navigate(`/edit/${id}`);
+    setSelectedJournalId(id);
+    if (actionToNavigate === 'delete') {
+      setShowDeleteModal(true);
+      return;
+    }
+    if (!actionToNavigate) {
+      navigate(`/edit/${id}`);
+    } else {
+      navigate(`/${actionToNavigate}/${id}`);
+    }
+    setActionToNavigate(''); // Reset action after navigation
   };
 
   const handleLogout = () => {
@@ -68,181 +86,112 @@ const MainView: React.FC = () => {
     navigate('/login');
   };
 
+  const handleDeleteJournal = () => {
+    if (selectedJournalId) {
+      deleteJournal(selectedJournalId);
+    }
+    setSelectedJournalId(null);
+    setActionToNavigate('');
+  };
+
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div
-        style={{
-          display: 'flex',
-          backgroundColor: '#fff',
-          zIndex: 1000,
-          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-        }}
-      >
+    <div className="main-view-root">
+      <div className="main-view-header">
       <button
-        style={{
-          margin: '10px',
-          padding: '10px 20px',
-          backgroundColor: 'transparent',
-          color: '#000',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
+        className={`main-view-btn${actionToNavigate === 'create' ? ' active' : ''}`}
         onClick={() => navigate('/create')}
       >
         <span role="img" aria-label="Створити" style={{ marginRight: 8 }}>➕</span>
-        Створити
       </button>
       <button
-        style={{
-          margin: '10px',
-          padding: '10px 20px',
-          backgroundColor: 'transparent',
-          color: '#000',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-        onClick={() => navigate('/create-copy')}
+        className={`main-view-btn${actionToNavigate === 'create-copy' ? ' active' : ''}`}
+        onClick={() => actionToNavigate === 'create-copy' ? setActionToNavigate('') : setActionToNavigate('create-copy')}
       >
         <span role="img" aria-label="Копія" style={{ marginRight: 8 }}>📋</span>
         Створити копію
       </button>
       <button
-        style={{
-          margin: '10px',
-          padding: '10px 20px',
-          backgroundColor: 'transparent',
-          color: '#000',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-        onClick={() => navigate('/edit')}
+        className={`main-view-btn${actionToNavigate === 'edit' ? ' active' : ''}`}
+        onClick={() => actionToNavigate === 'edit' ? setActionToNavigate('') : setActionToNavigate('edit')}
       >
         <span role="img" aria-label="Редагувати" style={{ marginRight: 8 }}>✏️</span>
         Редагувати
       </button>
       <button
-        style={{
-          margin: '10px',
-          padding: '10px 20px',
-          backgroundColor: 'transparent',
-          color: '#000',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-        onClick={() => navigate('/delete')}
+        className={`main-view-btn${actionToNavigate === 'delete' ? ' active' : ''}`}
+        onClick={() => actionToNavigate === 'delete' ? setActionToNavigate('') : setActionToNavigate('delete')}
       >
         <span role="img" aria-label="Видалити" style={{ marginRight: 8 }}>🗑️</span>
         Видалити
       </button>
+      {showDeleteModal && (
+        <DeleteConfirmation
+          isOpen={showDeleteModal}
+          onConfirm={() => {
+            handleDeleteJournal();
+            setShowDeleteModal(false);
+            setSelectedJournalId(null);
+          }}
+          onCancel={() => {
+            setShowDeleteModal(false);
+            setSelectedJournalId(null);
+            setActionToNavigate('');
+          }}
+        />
+      )}
       <button
-        style={{
-          margin: '10px',
-          padding: '10px 20px',
-          backgroundColor: 'transparent',
-          color: '#000',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
+        className="main-view-btn"
         onClick={() => fetchTableData(currentPage ? currentPage : 1)}
       >
         <span role="img" aria-label="Оновити" style={{ marginRight: 8 }}>🔄</span>
         Оновити
       </button>
       <button
-        style={{
-          margin: '10px',
-          padding: '10px 20px',
-          backgroundColor: 'transparent',
-          color: '#000',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
+        className="main-view-btn"
         onClick={() => navigate('/filter')}
       >
         <span role="img" aria-label="Фільтр" style={{ marginRight: 8 }}>🔍</span>
         Фільтр
       </button>
-        <button
-          style={{
-            margin: '10px',
-            padding: '10px 20px',
-            backgroundColor: 'transparent',
-            color: '#000',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
-          onClick={handleLogout}
-        >
-            <span role="img" aria-label="Вихід" style={{ marginRight: 8 }}>🚪</span>
-          Вихід
-        </button>
-        {/* Pagination Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', marginRight: '20px' }}>
-          <button
-            style={{
-              margin: '0 5px',
-              padding: '5px 10px',
-              backgroundColor: 'transparent',
-              color: '#000',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer',
-            }}
-            onClick={() => fetchTableData(currentPage ? currentPage - 1 : 1)}
-            disabled={currentPage === 1}
-          >
-            <span role="img" aria-label="Попередня сторінка">◀️</span>
-          </button>
-          <span style={{ margin: '0 10px' }}>
-            Сторінка {currentPage} з {totalPages}
-          </span>
-          <button
-            style={{
-              margin: '0 5px',
-              padding: '5px 10px',
-              backgroundColor: 'transparent',
-              color: '#000',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer',
-            }}
-            onClick={() => fetchTableData(currentPage ? currentPage + 1 : 1)}
-            disabled={currentPage === totalPages}
-          >
-            <span role="img" aria-label="Наступна сторінка">▶️</span>
-          </button>
-        </div>
-      </div>
-        <div style={{padding: '16px 32px', paddingBottom: '32px', margin: '16px 0', height: '100%'}}>
-          <Table columns={tableColumns} data={preparedTableData} click={clickHandler} />
-        </div>
-      <footer
-        style={{
-          width: '100%',
-          backgroundColor: '#fff',
-          boxShadow: '0 -2px 4px rgba(0,0,0,0.05)',
-          padding: '16px 32px',
-          fontSize: '14px',
-          color: '#000',
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-        }}
+      <button
+        className="main-view-btn"
+        onClick={handleLogout}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ display: 'inline-block', width: 24, height: 24, backgroundColor: 'yellow', borderRadius: 2, verticalAlign: 'middle' }} />
-        <span style={{ verticalAlign: 'middle' }}> Переміщений</span>
-        <div style={{ display: 'inline-block', width: 24, height: 24, backgroundColor: 'red', borderRadius: 2, verticalAlign: 'middle' }} />
-        <span style={{ verticalAlign: 'middle' }}> Протермінований</span>
-        <div style={{ display: 'inline-block', width: 24, height: 24, backgroundColor: 'green', borderRadius: 2, verticalAlign: 'middle' }} />
-        <span style={{ verticalAlign: 'middle' }}> Прийнятий в експлуатацію</span>
+        <span role="img" aria-label="Вихід" style={{ marginRight: 8 }}>🚪</span>
+        Вихід
+      </button>
+      {/* Pagination Controls */}
+      <div className="main-view-pagination">
+        <button
+          className="main-view-pagination-btn"
+          onClick={() => fetchTableData(currentPage ? currentPage - 1 : 1)}
+          disabled={currentPage === 1}
+        >
+          <span role="img" aria-label="Попередня сторінка">◀️</span>
+        </button>
+        <span className="main-view-pagination-info">
+          Сторінка {currentPage} з {totalPages}
+        </span>
+        <button
+          className="main-view-pagination-btn"
+          onClick={() => fetchTableData(currentPage ? currentPage + 1 : 1)}
+          disabled={currentPage === totalPages}
+        >
+          <span role="img" aria-label="Наступна сторінка">▶️</span>
+        </button>
+      </div>
+      </div>
+      <div className="main-view-table-container">
+        <Table columns={tableColumns} data={preparedTableData} click={clickHandler} activeRowId={selectedJournalId} />
+      </div>
+      <footer className="main-view-footer">
+        <div className="main-view-footer-legend">
+          <div className="main-view-legend-item main-view-legend-moved" />
+          <span> Переміщений</span>
+          <div className="main-view-legend-item main-view-legend-overdue" />
+          <span> Протермінований</span>
+          <div className="main-view-legend-item main-view-legend-accepted" />
+          <span> Прийнятий в експлуатацію</span>
         </div>
       </footer>
     </div>
