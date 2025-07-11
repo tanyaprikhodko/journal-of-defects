@@ -4,7 +4,6 @@ import AuthorizeContainer from './containers/AuthorizeContainer';
 import MainView from './containers/MainView';
 import NotFoundPage from './containers/NotFoundPage';
 import EditPage from './containers/EditPage';
-import DeletePage from './containers/DeletePage';
 
 const isAuthenticated = () => {
     // Replace this with your actual authentication logic
@@ -45,7 +44,7 @@ const AppRouter: React.FC = () => {
                     }
                 />
                 <Route
-                    path="/create/:id"
+                    path="/create"
                     element={
                         <PrivateRoute>
                             <EditPage />

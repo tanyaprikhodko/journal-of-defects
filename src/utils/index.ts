@@ -12,7 +12,6 @@ export const parseJwt = (token: string) => {
     const payload = JSON.parse(jsonPayload);
     const preparedKeys = Object.keys(payload).reduce((acc, key) => {
     const preparedKey = key.substring(key.lastIndexOf('/') + 1);
-      console.log(`Key: ${key}, Prepared Key: ${preparedKey}, Value: ${payload[key]}`);
       acc[preparedKey] = payload[key];
       return acc;
     }, {} as Record<string, any>);

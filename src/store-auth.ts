@@ -21,7 +21,7 @@ export interface AuthState {
   logout: () => void;
   setDepartments: (departments: Department[]) => void;
   setUsers: (users: AuthUser[]) => void;
-  fetchUsers: (departmentId: string) => Promise<void>;
+  fetchUsers: (departmentId?: string) => Promise<void>;
   fetchDepartments: () => Promise<void>;
   refreshTokenAsync: () => Promise<boolean>;
 }
@@ -88,7 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchUsers: async (departmentId) => {
     try {
       const url = departmentId
-        ? `http://localhost:5188/api/Users?departmentId=${departmentId}`
+        ? `http://localhost:5188/api/Users?departmentId=${departmentId ??  localStorage.getItem('departmentId')}`
         : 'http://localhost:5188/api/Users';
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch users');
@@ -115,13 +115,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   refreshTokenAsync: async () => {
-    console.log('Refreshing token...');
-    return true
+    return true; // Placeholder for refresh token logic
     // try {
     //   const response = await fetch('http://localhost:5188/api/Authentication/refresh-token', {
     //     method: 'POST',
     //     headers: { 'Content-Type': 'application/json' },
-    //     credentials: 'include'
+    //     credentials: 'include',
+    //     body: JSON.stringify({ refreshToken: localStorage.getItem('refreshToken') || '' })
     //   });
     //   if (response.ok) {
     //     const { accessToken, refreshToken } = await response.json();

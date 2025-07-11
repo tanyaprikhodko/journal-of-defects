@@ -3,81 +3,131 @@ import { useParams, useNavigate } from 'react-router-dom';
 import './styles/edit.scss';
 import { toast, ToastContainer } from 'react-toastify';
 import { useAuthStore } from '../store-auth';
-import { useTableStore, TableRow } from '../store-zustand';
+import { useTableStore, TableRow, CommentRequest, createJournalPayload } from '../store-zustand';
 import 'react-toastify/dist/ReactToastify.css';
 import CommentsModal from '../components/CommentsModal';
-import { TABLE_COLUMNS } from '../constants/tableColumns';
+import { TABLE_COLUMNS, INITIAL_ROW_DATA } from '../constants/tableColumns';
 
 
 const EditPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const isEditMode = window.location.pathname.includes('edit');
-    const isCreateMode = window.location.pathname.includes('create');
-    const isCopyMode = window.location.pathname.includes('create-copy');
+    // const isCreateMode = window.location.pathname.includes('create');
+    // const isCopyMode = window.location.pathname.includes('create-copy');
     const fetchTableDataById = useTableStore(state => state.fetchTableDataById);
     const userOptions = useAuthStore(state => state.users);
     const objectTypes = useTableStore(state => state.objectTypes);
     const lookupPlaces = useTableStore(state => state.lookupPlaces);
+    const substations = useTableStore(state => state.substations);
     const [showCommentsModal, setShowCommentsModal] = React.useState(false);
     const getCommentsById = useTableStore(state => state.getCommentsById);
     const navigate = useNavigate();
     const addComment = useTableStore(state => state.addComment);
     const fetchObjectTypes = useTableStore(state => state.fetchObjectTypes);
     const fetchLookupPlaces = useTableStore(state => state.fetchLookupPlaces);
+    const createJournal = useTableStore(state => state.createJournal);
+    const fetchUsers = useAuthStore(state => state.fetchUsers);
+    const fetchSubstations = useTableStore(state => state.fetchSubstations);
+    const tableDataById = useTableStore.getState().tableDataById;
 
     const [form, setForm] = React.useState<TableRow>({} as TableRow);
+    const [commentsToAdd, setCommentsToAdd] = React.useState<CommentRequest[]>([]);
+    const [changedFields, setChangedFields] = React.useState<string[]>([]);
 
     React.useEffect(() => {
         if (id) fetchTableDataById(Number(id));
         fetchObjectTypes();
         fetchLookupPlaces();
+        fetchUsers();
+        fetchSubstations();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
-    const tableDataById = useTableStore.getState().tableDataById;
+    const handleAddComment = (comment: CommentRequest) => {
+        if(isEditMode) {
+            addComment(comment);
+        } else {
+            setChangedFields(prev => [...prev, 'comments']);
+            setCommentsToAdd(prev => [...prev, comment]);
+        }
+    };
 
     React.useEffect(() => {
-        // Update local form state when data is fetched
         const fetched = tableDataById[Number(id)];
-        console.log('Fetched data for ID:', id, fetched);
-        setForm(fetched ?? ({} as TableRow));
+        setForm(
+            fetched ??
+            ({...INITIAL_ROW_DATA} as TableRow)
+        );
     }, [id, tableDataById]);
 
-console.log('Form state:', form);
     React.useEffect(() => {
-      getCommentsById(Number(id));
+        if (!id) return;
+        getCommentsById(Number(id));
     }, [getCommentsById, id]);
 
-    const handleSubmit = async(e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        toast.success('Збережено успішно!', { autoClose: 100 });
-        setTimeout(() => navigate('/main-view'), 110);
+        const payload: createJournalPayload = {
+            ...changedFields.includes('order') && { order: Number(form.order) || null },
+            ...changedFields.includes('condition') && { condition: form.condition || null },
+            ...changedFields.includes('substation') && { substationId: Number(form.substationId) || null },
+            ...changedFields.includes('objectNumber') && { objectNumber: Number(form.objectNumber) || null },
+            ...changedFields.includes('placeId') && { placeId: Number(form.placeId) || null },
+            ...changedFields.includes('responsibleId') && { responsibleId: Number(form.responsible?.id) || null },
+            ...changedFields.includes('completionTerm') && { completionTerm: form.completionTerm ? new Date(form.completionTerm).toISOString() : null },
+            ...changedFields.includes('technicalManagerId') && { technicalManagerId: Number(form.technicalManager?.id) || null },
+            ...changedFields.includes('acceptionDate') && { acceptionDate: form.acceptionDate ? new Date(form.acceptionDate).toISOString() : null },
+            ...changedFields.includes('acceptedBy') && { acceptedById: Number(form.acceptedBy?.id) || null },
+            ...changedFields.includes('completionDate') && { completionDate: form.completionDate ? new Date(form.completionDate).toISOString() : null },
+            ...changedFields.includes('completedBy') && { completedById: Number(form.completedBy?.id) || null },
+            ...changedFields.includes('confirmationDate') && { confirmationDate: form.confirmationDate ? new Date(form.confirmationDate).toISOString() : null },
+            ...changedFields.includes('confirmedBy') && { confirmedById: Number(form.confirmedBy?.id) || null },
+            ...changedFields.includes('registrationDate') && { registrationDate: form.registrationDate ? new Date(form.registrationDate).toISOString() : null },
+            ...changedFields.includes('objectTypeId') && { objectTypeId: Number(form.objectTypeId) || null },
+            ...changedFields.includes('connection') && { connection: form.connection || null },
+            ...changedFields.includes('description') && { description: form.description || null },
+            ...changedFields.includes('author') && { messageAuthorId: Number(form.messageAuthor?.id) || null },
+            ...changedFields.includes('redirectRegionId') && { redirectRegionId: Number(form.redirectRegionId) || null },
+            ...isEditMode && changedFields.includes('comments') ? { comments: commentsToAdd || [] } : {},
+        };
+        console.log('Form state:', form);
+        console.log('Submitting form with payload:', payload);
+        await createJournal(payload, isEditMode, id ? Number(id) : null);
+        await toast.success('Збережено успішно!', { autoClose: 100 });
+        navigate('/main-view');
     };
 
     const handleClose = () => {
-       navigate('/main-view')
-    }
-
-    // Helper to format date values for input fields
-    const formatDate = (val: string | Date | undefined) => {
-        if (!val) return '';
-        if (typeof val === 'string' && val.length >= 10) return val.slice(0, 10);
-        if (val instanceof Date && !isNaN(val.getTime())) return val.toISOString().slice(0, 10);
-        return '';
+        navigate('/main-view');
     };
 
-    function handleChange(
+    // Helper to format date values for input fields
+    // const formatDate = (val: string) => {
+    //     if (!val) {
+    //         return '';
+    //     }else {
+    //         return new Date(val).toISOString().slice(0, 10);
+    //     }
+    // };
+
+     function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
         field: string
     ): void {
-        const value = e.target.type === 'number'
-            ? (e.target.value === '' ? '' : Number(e.target.value))
-            : e.target.value;
-        setForm(prev => ({
+        setChangedFields(prev => [...prev, field]);
+        console.log('Changed fields:', e.target.value);
+        // const value = e.target.type === 'number'
+        //     ? (e.target.value === '' ? '' : Number(e.target.value))
+        //     : e.target.value;
+       setForm(prev => ({
             ...prev,
-            [field]: value
+            [field]: e.target.value,
+            // ...field === 'substationRegion' && { substationRegionId: e.target.value ? Number(e.target.value) : null },
+            ...field === 'place' && { placeId: e.target.value ? Number(e.target.value) : null },
+            ...field === 'objectType' && { objectTypeId: e.target.value ? Number(e.target.value) : null },
         }));
     }
+
     return (
         <>
             <div className="edit-header">
@@ -90,16 +140,17 @@ console.log('Form state:', form);
                     onClick={handleClose}
                     className="edit-header__close"
                     title="Закрити"
-                >
+                    >
                     <span role="img" aria-label="close">✖️</span>
                 </button>
             </div>
             <div className="edit-form-container">
+                    {/* {<p style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(form, null, 2)}</p>} */}
             <form className="edit-form" onSubmit={handleSubmit}> 
-                {/* defectState: select */}
+                {/* condition: select */}
                 <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE}</label>
-                    <select name="defectState" onChange={e => handleChange(e, 'defectState')} style={{ flex: 1 }}>
+                    <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE} condition</label>
+                    <select name="defectState" onChange={e => handleChange(e, 'condition')} style={{ flex: 1 }}>
                         <option value={form.condition || ''}>{form.condition || 'Оберіть стан'}</option>
                         <option value="Внесений">Внесений</option>
                         <option value="Розглянутий технічним керівником">Розглянутий технічним керівником</option>
@@ -109,15 +160,30 @@ console.log('Form state:', form);
                         <option value="Прийнятий в експлуатацію">Прийнятий в експлуатацію</option>
                     </select>
                 </div>
-                {/* number: number input */}
+                {/* order: number input */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.NUMBER}</label>
-                    <input type="number" name="number" value={form.order ?? ''} onChange={e => handleChange(e, 'number')} style={{ flex: 1 }} />
+                    <input type="number" name="number" value={form.order ?? ''} onChange={e => handleChange(e, 'order')} style={{ flex: 1 }} />
                 </div>
-                {/* createdAt: date picker */}
+                {/* registrationDate: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.CREATED_AT}</label>
-                    <input type="date" name="createdAt" value={formatDate(form.registrationDate)} onChange={e => handleChange(e, 'createdAt')} style={{ flex: 1 }} />
+                    <input
+                        type="date"
+                        name="createdAt"
+                        value={form.registrationDate ? new Date(form.registrationDate).toISOString().slice(0, 10) : ''}
+                        onChange={e => handleChange(
+                            {
+                                ...e,
+                                target: {
+                                    ...e.target,
+                                    value: new Date(e.target.value).toISOString()
+                                }
+                            },
+                            'registrationDate'
+                        )}
+                        style={{ flex: 1 }}
+                    />
                 </div>
                 {/* object: select */}
                 <div className="edit-row">
@@ -128,20 +194,26 @@ console.log('Form state:', form);
                             <option key={option.id} value={option.id}>{option.type}</option>
                         ))}
                     </select>
+                    <input type="number" name="objectTypeId" value={form.objectTypeId || ''} onChange={e => handleChange(e, 'objectTypeId')} />
                 </div>
                 {/* substation: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.SUBSTATION_EDIT}</label>
-                    <select name="substation" value={form.substation || ''} onChange={e => handleChange(e, 'substation')} style={{ flex: 1 }}>
-                        <option value="">Оберіть підстанцію</option>
-                        <option value="ps1">ПС 1</option>
-                        <option value="ps2">ПС 2</option>
+                    <select name="substationRegion" value={form.substationRegion || 'Оберіть регіон'} onChange={e => handleChange(e, 'substationRegion')} style={{ flex: 1 }}>
+                        {substations?.map(option => (
+                            <option key={option.id} value={option.id}>{option.name}</option>
+                        ))}
+                    </select>
+                    <select name="substation" value={form.substation || 'Оберіть підстанцію'} onChange={e => handleChange(e, 'substation')} style={{ flex: 1 }}>
+                        {substations?.map(option => (
+                            <option key={option.id} value={option.id}>{option.name}</option>
+                        ))}
                     </select>
                 </div>
-                {/* placeOfDefect: select */}
+                {/* place: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.PLACE_OF_DEFECT}</label>
-                    <select name="placeOfDefect" value={form.place || ''} onChange={e => handleChange(e, 'placeOfDefect')} style={{ flex: 1 }}>
+                    <select name="place" value={form.place || ''} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
                        <option value={form.place || ''} >{form.place || 'Оберіть місце'}</option>
                         {lookupPlaces?.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
@@ -153,10 +225,10 @@ console.log('Form state:', form);
                     <label className="edit-label">{TABLE_COLUMNS.CONNECTION}</label>
                     <input type="text" name="connection" value={form.connection || ''} onChange={e => handleChange(e, 'connection')} style={{ flex: 1 }} />
                 </div>
-                {/* essenceOfDefect: text input */}
+                {/* description: text input */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ESSENCE_OF_DEFECT}</label>
-                    <input type="text" name="essenceOfDefect" value={form.description || ''} onChange={e => handleChange(e, 'essenceOfDefect')} style={{ flex: 1 }} />
+                    <input type="text" name="description" value={form.description || ''} onChange={e => handleChange(e, 'description')} style={{ flex: 1 }} />
                 </div>
                 {/* author: select */}
                 <div className="edit-row">
@@ -168,70 +240,98 @@ console.log('Form state:', form);
                         ))}
                     </select>
                 </div>
-                {/* techLead: select */}
+                {/* technicalManager: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.TECH_LEAD}</label>
-                    <select name="techLead"  onChange={e => handleChange(e, 'techLead')} style={{ flex: 1 }}>
-                        <option value={form.technicalManager?.name || ''}>{form.technicalManager?.name || 'Оберіть керівника'}</option>
+                    <select name="technicalManager" onChange={e => handleChange(e, 'technicalManager')} style={{ flex: 1 }}>
+                        <option value={form.technicalManager?.id || ''}>{form.technicalManager?.name || 'Оберіть керівника'}</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
                     </select>
                 </div>
-                {/* responsibleRorElimination: select */}
+                {/* responsible: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.RESPONSIBLE_FOR_ELIMINATION}</label>
-                    <select name="responsibleRorElimination" value={form.responsible?.name || ''} onChange={e => handleChange(e, 'responsibleRorElimination')} style={{ flex: 1 }}>
-                        <option value={form.responsible?.name || ''}>{form.responsible?.name || 'Оберіть відповідального'}</option>
+                    <select name="responsible" value={form.responsible?.id || ''} onChange={e => handleChange(e, 'responsible')} style={{ flex: 1 }}>
+                        <option value={form.responsible?.id || ''}>{form.responsible?.name || 'Оберіть відповідального'}</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
                     </select>
                 </div>
-                {/* timeOfElimination: date picker */}
+                {/* completionTerm: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.TIME_OF_ELIMINATION}</label>
-                    <input type="date" name="timeOfElimination" value={formatDate(form.completionDate)} onChange={e => handleChange(e, 'timeOfElimination')} style={{ flex: 1 }} />
+                    <input type="date" name="completionTerm" value={form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
+                          {
+                                ...e,
+                                target: {
+                                    ...e.target,
+                                    value: new Date(e.target.value).toISOString()
+                                }
+                            }, 'completionTerm')} style={{ flex: 1 }} />
                 </div>
-                {/* dateOfAccepting: date picker */}
+                {/* acceptionDate: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DATE_OF_ACCEPTING}</label>
-                    <input type="date" name="dateOfAccepting" value={formatDate(form.acceptionDate)} onChange={e => handleChange(e, 'dateOfAccepting')} style={{ flex: 1 }} />
+                    <input type="date" name="acceptionDate" value={form.acceptionDate ? new Date(form.acceptionDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
+                        {
+                            ...e,
+                            target: {
+                                ...e.target,
+                                value: new Date(e.target.value).toISOString()
+                            }
+                        }, 'acceptionDate')} style={{ flex: 1 }} />
                 </div>
-                {/* acceptedPerson: select */}
+                {/* confirmedBy: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_PERSON}</label>
-                    <select name="acceptedPerson" onChange={e => handleChange(e, 'acceptedPerson')} style={{ flex: 1 }}>
-                        <option value={form.acceptedBy?.name || ''}>{form.acceptedBy?.name || 'Оберіть особу'}</option>
+                    <select name="confirmedBy" onChange={e => handleChange(e, 'confirmedBy')} style={{ flex: 1 }}>
+                        <option value={form.confirmedBy?.name || ''}>{form.confirmedBy?.name || 'Оберіть особу'}</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
                     </select>
                 </div>
-                {/* dateOfElimination: date picker */}
+                {/* completionDate: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DATE_OF_ELIMINATION}</label>
-                    <input type="date" name="dateOfElimination" value={formatDate(form.completionDate)} onChange={e => handleChange(e, 'dateOfElimination')} style={{ flex: 1 }} />
+                    <input type="date" name="completionDate" value={form.completionDate ? new Date(form.completionDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
+                        {
+                            ...e,
+                            target: {
+                                ...e.target,
+                                value: new Date(e.target.value).toISOString()
+                            }
+                        }, 'completionDate')} style={{ flex: 1 }} />
                 </div>
-                {/* eliminated: select */}
+                {/* completedBy: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ELIMINATED}</label>
-                    <select name="eliminated"  onChange={e => handleChange(e, 'eliminated')} style={{ flex: 1 }}>
+                    <select name="completedBy"  onChange={e => handleChange(e, 'completedBy')} style={{ flex: 1 }}>
                         <option value={form.completedBy?.name || ''}>{form.completedBy?.name || 'Оберіть особу'}</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
                     </select>
                 </div>
-                {/* dateOfStartExploitation: date picker */}
+                {/* confirmationDate: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DATE_OF_START_EXPLOITATION}</label>
-                    <input type="date" name="dateOfStartExploitation" value={formatDate(form.confirmationDate)} onChange={e => handleChange(e, 'dateOfStartExploitation')} style={{ flex: 1 }} />
+                    <input type="date" name="confirmationDate" value={form.confirmationDate ? new Date(form.confirmationDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
+                        {
+                            ...e,
+                            target: {
+                                ...e.target,
+                                value: new Date(e.target.value).toISOString()
+                            }
+                        }, 'confirmationDate')} style={{ flex: 1 }} />
                 </div>
-                {/* acceptedExploitationPerson: select */}
+                {/* acceptedBy: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON}</label>
-                    <select name="acceptedExploitationPerson" onChange={e => handleChange(e, 'acceptedExploitationPerson')} style={{ flex: 1 }}>
+                    <select name="acceptedBy" onChange={e => handleChange(e, 'acceptedBy')} style={{ flex: 1 }}>
                         <option value={form.acceptedBy?.name || ''}>{form.acceptedBy?.name || 'Оберіть особу'}</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
@@ -258,7 +358,7 @@ console.log('Form state:', form);
                 {showCommentsModal && (
                     <CommentsModal
                         journalId={form.id}
-                        onAddComment={(comment) => addComment(form.id, comment)}
+                        onAddComment={(comment) => handleAddComment(comment)}
                         onClose={() => setShowCommentsModal(false)}
                     />
                 )}

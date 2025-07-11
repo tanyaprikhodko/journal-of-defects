@@ -82,6 +82,32 @@ import { parseJwt } from './utils';
 //   },
 // }));
 
+export interface createJournalPayload {
+  order?: number | null;
+  substationId?: number | null;
+  objectNumber?: number | null;
+  placeId?: number | null;
+  responsibleId?: number | null;
+  completionTerm?: string | null;
+  technicalManagerId?: number | null;
+  acceptionDate?: string | null;
+  acceptedById?: number | null;
+  completionDate?: string | null;
+  completedById?: number | null;
+  confirmationDate?: string | null;
+  confirmedById?: number | null;
+  registrationDate?: string | null;
+  objectTypeId?: number | null;
+  connection?: string | null;
+  description?: string | null;
+  messageAuthorId?: number | null;
+  redirectRegionId?: number | null;
+  condition?: string | null;
+  comments?: CommentRequest[];
+  substationRegionId?: number | null;
+  substationRegion?: string | null;
+}
+
 interface Person {
   id: number;
   name: string;
@@ -112,25 +138,59 @@ export interface TableRow {
   completedBy: Person;
   confirmedBy: Person;
   confirmationDate: string;
+  redirectRegionId?: string;
+  substationId?: number | null;
+  objectTypeId?: number | null;
+  placeId?: number | null;
 }
 
+export interface Comment {
+  id: number;
+  authorId: number;
+  authorName: string;
+  journalId: number;
+  body: string;
+  creationDate: string;
+  isEdited: boolean;
+}
+
+export interface CommentRequest {
+  body: string;
+  authorId: number;
+  journalId: number;
+}
+
+
+export interface Substation {
+    id: string,
+    name: string,
+    substations: [
+      {
+        id: number,
+        name: string
+      }
+    ]
+}
 export interface TableState {
   tableData: TableRow[];
   tableDataById: Record<number, TableRow>;
   totalPages?: number;
   currentPage?: number;
-  commentsById?: Record<number, any[]>; // Assuming comments are an array of objects
+  commentsById?: Record<number, Comment[]>;
   objectTypes: Array<{ id: number; type: string }>;
   lookupPlaces?: Array<{ id: number; name: string }>;
   usersByRegionId?: Record<string, Person[]>;
-  fetchTableData: (page?: number) => Promise<void>;
+  substations?: Substation[];
+  fetchTableData: (params: { page?: number; sortBy?: string; order?: string }) => Promise<void>;
   fetchTableDataById: (id: number) => Promise<void>;
   getCommentsById: (id: number) => Promise<void>;
-  addComment: (journalId: number, comment: string) => Promise<void>;
+  addComment: (comment: CommentRequest) => Promise<void>;
   fetchObjectTypes: () => Promise<void>;
   fetchLookupPlaces: () => Promise<void>;
+  fetchSubstations: () => Promise<void>;
   fetchUsersByRegionId: (regionId: string) => Promise<void>;
   deleteJournal: (id: number) => Promise<void>;
+  createJournal: (journal: createJournalPayload, isEditMode: boolean, id: number | null) => Promise<void>;
 }
 
 export const useTableStore = create<TableState>((set, get) => ({
@@ -139,34 +199,36 @@ export const useTableStore = create<TableState>((set, get) => ({
   objectTypes: [],
   lookupPlaces: [],
   usersByRegionId: {},
-  fetchTableData: async (page?: number) => {
+  fetchTableData: async (params) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const params = new URLSearchParams({
-        page: page ? page.toString() : get().currentPage?.toString() || '1',
+      const searchParams = new URLSearchParams({
+        page: params?.page ? params.page.toString() : get().currentPage?.toString() || '1',
+        ColumnName: params?.sortBy || '',
+        IsAscending: params?.order === 'asc' ? 'true' : 'false',
       });
-      const response = await fetch(`http://localhost:5188/api/Journals?${params.toString()}`, {
+      const response = await fetch(`http://localhost:5188/api/Journals?${searchParams.toString()}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        method: 'GET'
+        method: 'GET',
       });
       if (!response.ok) throw new Error('Failed to fetch table data');
       const data = await response.json();
-      // Defensive: support both array and { journals: [...] }
       set({ tableData: data.journals || [] });
-      set({ tableDataById: data.journals.reduce((acc: Record<number, TableRow>, row: TableRow) => {
-        acc[row.id] = row;
-        return acc;
-      }, {})});
+      set({
+        tableDataById: data.journals.reduce((acc: Record<number, TableRow>, row: TableRow) => {
+          acc[row.id] = row;
+          return acc;
+        }, {}),
+      });
       set({ totalPages: data.totalPages, currentPage: data.currentPage });
-      console.log('Table data fetched successfully:', data.journals);
-    } catch(error) {
+    } catch (error) {
       console.error('Error fetching table data:', error);
       set({ tableData: [] });
     }
   },
 
-fetchTableDataById: async (id: number) => {
-    if (get().tableDataById[id]) return
+  fetchTableDataById: async (id: number) => {
+    if (get().tableDataById[id]) return;
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(`http://localhost:5188/api/Journals/${id}`, {
@@ -175,31 +237,33 @@ fetchTableDataById: async (id: number) => {
       if (!response.ok) throw new Error('Failed to fetch table data by ID');
       const data = await response.json();
       set(state => ({
-        tableDataById: { ...state.tableDataById, [id]: data }
+        tableDataById: { ...state.tableDataById, [id]: data },
       }));
-    } catch {
-      // Optionally handle error
+    } catch (error) {
+      console.error('Error fetching table data by ID:', error);
     }
   },
 
   getCommentsById: async (id: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5188/api/Journals/${id }/comments`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+      const response = await fetch(`http://localhost:5188/api/Journals/${id}/comments`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
       if (!response.ok) throw new Error('Failed to fetch comments');
       const comments = await response.json();
       set(state => ({
-        commentsById: { ...state.commentsById, [id]: comments }
+        commentsById: { ...state.commentsById, [id]: comments },
       }));
     } catch (error) {
       console.error('Error fetching comments:', error);
       set(state => ({
-        commentsById: { ...state.commentsById, [id]: [] }
+        commentsById: { ...state.commentsById, [id]: [] },
       }));
     }
   },
 
-  addComment: async (journalId: number, comment: string) => {
+  addComment: async (comment: CommentRequest) => {
     try {
       const token = localStorage.getItem('accessToken');
       const user = parseJwt(token || '');
@@ -209,14 +273,17 @@ fetchTableDataById: async (id: number) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ comment, authorId: user.nameidentifier, journalId })
+        body: JSON.stringify({ comment, authorId: user.nameidentifier, journalId: comment.journalId }),
       });
       if (!response.ok) throw new Error('Failed to post comment');
       const newComment = await response.json();
       set(state => ({
-        commentsById: { ...state.commentsById, [journalId]: [...(state.commentsById?.[journalId] || []), newComment] }
+        commentsById: {
+          ...state.commentsById,
+          [comment.journalId]: [...(state.commentsById?.[comment.journalId] || []), newComment],
+        },
       }));
     } catch (error) {
       console.error('Error posting comment:', error);
@@ -224,7 +291,7 @@ fetchTableDataById: async (id: number) => {
   },
 
   fetchObjectTypes: async () => {
-    try{
+    try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch('http://localhost:5188/api/Lookups/objectTypes', {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
@@ -260,15 +327,31 @@ fetchTableDataById: async (id: number) => {
       });
       if (!response.ok) throw new Error('Failed to fetch users by region ID');
       const data = await response.json();
-      set({ usersByRegionId: {
-        ...get().usersByRegionId,
-        [regionId as string]: data
-      } });
+      set({
+        usersByRegionId: {
+          ...get().usersByRegionId,
+          [regionId as string]: data,
+        },
+      });
     } catch (error) {
       console.error('Error fetching users by region ID:', error);
       set({ usersByRegionId: {} });
     }
   },
+
+ fetchSubstations: async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5188/api/Lookups/substationRegions', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to fetch substations');
+      const data = await response.json();
+      set({ substations: data });
+    } catch (error) {
+      console.error('Error fetching substations:', error);
+    }
+ },
 
   deleteJournal: async (id: number) => {
     try {
@@ -279,10 +362,33 @@ fetchTableDataById: async (id: number) => {
       });
       if (!response.ok) throw new Error('Failed to delete journal');
       // Optionally refresh table data after deletion
-      await get().fetchTableData(get().currentPage);
+      await get().fetchTableData({ page: get().currentPage });
     } catch (error) {
       console.error('Error deleting journal:', error);
       throw error;
     }
-  }
+  },
+
+  createJournal: async (journal: createJournalPayload, isEditMode: boolean, id: number | null) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5188/api/Journals/${ isEditMode ? id : ''}`, {
+        method: isEditMode ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(journal),
+      });
+      if (!response.ok) throw new Error('Failed to create journal');
+      const newJournal = await response.json();
+      set(state => ({
+        tableData: [...state.tableData, newJournal],
+        tableDataById: { ...state.tableDataById, [newJournal.id]: newJournal },
+      }));
+    } catch (error) {
+      console.error('Error creating journal:', error);
+      throw error;
+    }
+  },
 }));

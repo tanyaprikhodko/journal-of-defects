@@ -1,17 +1,17 @@
 import React from "react";
 import './styles/comments.scss';
 import { useTableStore } from "../store-zustand";
+import { CommentRequest } from "../store-zustand";
 
 interface EditModalProps {
   journalId: number;
-  onAddComment: (comment: string) => void;
+  onAddComment: (comment: CommentRequest) => void;
   onClose: () => void;
 }
 
 const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose }) => {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const comments = useTableStore(state => state?.commentsById?.[journalId] || []);
-console.log('Comments for journalId', journalId, comments);
   return (
     <div className="edit-modal">
       <div className="edit-modal-content">
@@ -60,7 +60,7 @@ console.log('Comments for journalId', journalId, comments);
               onClick={() => {
                 const value = textareaRef.current?.value.trim();
                 if (value) {
-                  onAddComment(value);
+                  onAddComment({ body: value, authorId: 1, journalId: journalId });
                   if (textareaRef.current) textareaRef.current.value = "";
                 }
               }}

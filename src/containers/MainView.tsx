@@ -6,13 +6,13 @@ import { useAuthStore } from '../store-auth';
 import { TABLE_COLUMNS } from '../constants/tableColumns';
 import { TableRow } from '../types/table';
 import DeleteConfirmation from '../components/DeleteConformation';
+import ColumnSort from '../components/ColumnSort';
 import '../containers/styles/mainView.scss';
 
 const MainView: React.FC = () => {
   const tableColumns = [
     { key: 'condition', label: TABLE_COLUMNS.DEFECT_STATE },
-    { key: 'order', label: TABLE_COLUMNS.NUMBER }, // Combine two keys in one column
-    { key: 'substationRegion', label: TABLE_COLUMNS.SUBSTATION_REGION },
+    { key: 'order', label: TABLE_COLUMNS.NUMBER },
     { key: 'registrationDate', label: TABLE_COLUMNS.CREATED_AT },
     { key: 'objectType', label: TABLE_COLUMNS.OBJECT },
     { key: 'substation', label: TABLE_COLUMNS.SUBSTATION },
@@ -53,18 +53,18 @@ const MainView: React.FC = () => {
         confirmationDate: item.confirmationDate ? new Date(item.confirmationDate).toLocaleDateString() : '',
         completionDate: item.completionDate ? new Date(item.completionDate).toLocaleDateString() : '',
         acceptionDate: item.acceptionDate ? new Date(item.acceptionDate).toLocaleDateString() : '',
-        messageAuthor: `${item.messageAuthor.name} - ${item.messageAuthor.rank}`,
-        technicalManager: `${item.technicalManager.name} - ${item.technicalManager.rank}`,
-        responsible: item.responsible ? `${item.responsible.name} - ${item.responsible.rank}` : '',
-        completedBy: item.completedBy ? `${item.completedBy.name} - ${item.completedBy.rank}` : '',
-        acceptedBy: item.acceptedBy ? `${item.acceptedBy.name} - ${item.acceptedBy.rank}` : '',
-        confirmedBy: item.confirmedBy ? `${item.confirmedBy.name} - ${item.confirmedBy.rank}` : '',
+        messageAuthor: `${item.messageAuthor?.name} - ${item.messageAuthor?.rank}`,
+        technicalManager: `${item.technicalManager?.name} - ${item.technicalManager?.rank}`,
+        responsible: item.responsible ? `${item.responsible?.name} - ${item.responsible?.rank}` : '',
+        completedBy: item.completedBy ? `${item.completedBy?.name} - ${item.completedBy?.rank}` : '',
+        acceptedBy: item.acceptedBy ? `${item.acceptedBy?.name} - ${item.acceptedBy?.rank}` : '',
+        confirmedBy: item.confirmedBy ? `${item.confirmedBy?.name} - ${item.confirmedBy?.rank}` : '',
       }
     });
   }, [tableData]);
 
   React.useEffect(() => {
-    fetchTableData();
+    fetchTableData({ page: 1 });
   }, [fetchTableData]);
 
   const clickHandler = (id: number) => {
@@ -78,7 +78,7 @@ const MainView: React.FC = () => {
     } else {
       navigate(`/${actionToNavigate}/${id}`);
     }
-    setActionToNavigate(''); // Reset action after navigation
+    setActionToNavigate('');
   };
 
   const handleLogout = () => {
@@ -102,6 +102,7 @@ const MainView: React.FC = () => {
         onClick={() => navigate('/create')}
       >
         <span role="img" aria-label="Створити" style={{ marginRight: 8 }}>➕</span>
+        Створити
       </button>
       <button
         className={`main-view-btn${actionToNavigate === 'create-copy' ? ' active' : ''}`}
@@ -141,7 +142,7 @@ const MainView: React.FC = () => {
       )}
       <button
         className="main-view-btn"
-        onClick={() => fetchTableData(currentPage ? currentPage : 1)}
+        onClick={() => fetchTableData({ page: currentPage ? currentPage : 1 })}
       >
         <span role="img" aria-label="Оновити" style={{ marginRight: 8 }}>🔄</span>
         Оновити
@@ -164,7 +165,7 @@ const MainView: React.FC = () => {
       <div className="main-view-pagination">
         <button
           className="main-view-pagination-btn"
-          onClick={() => fetchTableData(currentPage ? currentPage - 1 : 1)}
+          onClick={() => fetchTableData({page: currentPage ? currentPage - 1 : 1})}
           disabled={currentPage === 1}
         >
           <span role="img" aria-label="Попередня сторінка">◀️</span>
@@ -174,7 +175,7 @@ const MainView: React.FC = () => {
         </span>
         <button
           className="main-view-pagination-btn"
-          onClick={() => fetchTableData(currentPage ? currentPage + 1 : 1)}
+          onClick={() => fetchTableData({page: currentPage ? currentPage + 1 : 1})}
           disabled={currentPage === totalPages}
         >
           <span role="img" aria-label="Наступна сторінка">▶️</span>
@@ -192,6 +193,9 @@ const MainView: React.FC = () => {
           <span> Протермінований</span>
           <div className="main-view-legend-item main-view-legend-accepted" />
           <span> Прийнятий в експлуатацію</span>
+        </div>
+        <div className="main-view-column-sort">
+         <ColumnSort onChange={(sortBy, order) => fetchTableData({ sortBy, order })} />
         </div>
       </footer>
     </div>
