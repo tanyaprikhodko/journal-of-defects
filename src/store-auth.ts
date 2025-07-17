@@ -115,35 +115,38 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   refreshTokenAsync: async () => {
-    return true; // Placeholder for refresh token logic
-    // try {
-    //   const response = await fetch('http://localhost:5188/api/Authentication/refresh-token', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     credentials: 'include',
-    //     body: JSON.stringify({ refreshToken: localStorage.getItem('refreshToken') || '' })
-    //   });
-    //   if (response.ok) {
-    //     const { accessToken, refreshToken } = await response.json();
-    //     if (accessToken) {
-    //       localStorage.setItem('accessToken', accessToken);
-    //       set({ isAuthenticated: true });
-    //     }
-    //     if (refreshToken) {
-    //       localStorage.setItem('refreshToken', refreshToken);
-    //     }
-    //     return true;
-    //   } else {
-    //     set({ isAuthenticated: false, currentUser: null });
-    //     localStorage.removeItem('accessToken');
-    //     localStorage.removeItem('refreshToken');
-    //     return false;
-    //   }
-    // } catch {
-    //   set({ isAuthenticated: false, currentUser: null });
-    //   localStorage.removeItem('accessToken');
-    //   localStorage.removeItem('refreshToken');
-    //   return false;
-    // }
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5188/api/Authentication/refresh-token', {
+        method: 'POST',
+         headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({ refreshToken })
+      });
+      if (response.ok) {
+        const { accessToken, refreshToken } = await response.json();
+        if (accessToken) {
+          localStorage.setItem('accessToken', accessToken);
+          set({ isAuthenticated: true });
+        }
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
+        return true;
+      } else {
+        set({ isAuthenticated: false, currentUser: null });
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        return false;
+      }
+    } catch {
+      set({ isAuthenticated: false, currentUser: null });
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      return false;
+    }
   },
 }));

@@ -142,6 +142,7 @@ export interface TableRow {
   substationId?: number | null;
   objectTypeId?: number | null;
   placeId?: number | null;
+  messageAuthorId?: number | null;
 }
 
 export interface Comment {

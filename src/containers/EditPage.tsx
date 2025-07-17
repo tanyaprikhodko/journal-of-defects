@@ -86,7 +86,7 @@ const EditPage: React.FC = () => {
             ...changedFields.includes('objectTypeId') && { objectTypeId: Number(form.objectTypeId) || null },
             ...changedFields.includes('connection') && { connection: form.connection || null },
             ...changedFields.includes('description') && { description: form.description || null },
-            ...changedFields.includes('author') && { messageAuthorId: Number(form.messageAuthor?.id) || null },
+            ...changedFields.includes('author') && { messageAuthorId: Number(form.messageAuthorId) || null },
             ...changedFields.includes('redirectRegionId') && { redirectRegionId: Number(form.redirectRegionId) || null },
             ...isEditMode && changedFields.includes('comments') ? { comments: commentsToAdd || [] } : {},
         };
@@ -101,30 +101,20 @@ const EditPage: React.FC = () => {
         navigate('/main-view');
     };
 
-    // Helper to format date values for input fields
-    // const formatDate = (val: string) => {
-    //     if (!val) {
-    //         return '';
-    //     }else {
-    //         return new Date(val).toISOString().slice(0, 10);
-    //     }
-    // };
-
      function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
         field: string
     ): void {
         setChangedFields(prev => [...prev, field]);
         console.log('Changed fields:', e.target.value);
-        // const value = e.target.type === 'number'
-        //     ? (e.target.value === '' ? '' : Number(e.target.value))
-        //     : e.target.value;
+
        setForm(prev => ({
             ...prev,
             [field]: e.target.value,
-            // ...field === 'substationRegion' && { substationRegionId: e.target.value ? Number(e.target.value) : null },
-            ...field === 'place' && { placeId: e.target.value ? Number(e.target.value) : null },
-            ...field === 'objectType' && { objectTypeId: e.target.value ? Number(e.target.value) : null },
+            ...field === 'substationRegion' && { substationRegionId: e.target.value },
+            ...field === 'place' && { placeId: Number(e.target.value) },
+            ...field === 'objectType' && { objectTypeId: Number(e.target.value) },
+            ...field === 'author' && { messageAuthorId: 1 },
         }));
     }
 
@@ -145,7 +135,7 @@ const EditPage: React.FC = () => {
                 </button>
             </div>
             <div className="edit-form-container">
-                    {/* {<p style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(form, null, 2)}</p>} */}
+                    {<p style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(form, null, 2)}</p>}
             <form className="edit-form" onSubmit={handleSubmit}> 
                 {/* condition: select */}
                 <div className="edit-row">
@@ -205,16 +195,19 @@ const EditPage: React.FC = () => {
                         ))}
                     </select>
                     <select name="substation" value={form.substation || 'Оберіть підстанцію'} onChange={e => handleChange(e, 'substation')} style={{ flex: 1 }}>
-                        {substations?.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
-                        ))}
+                        {(substations
+                            ?.find(option => option.id === form.substationRegionId)?.substations || [])
+                            .map(opt => (
+                                <option key={opt.id} value={opt.id}>{opt.name}</option>
+                            ))
+                        }
                     </select>
                 </div>
                 {/* place: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.PLACE_OF_DEFECT}</label>
-                    <select name="place" value={form.place || ''} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
-                       <option value={form.place || ''} >{form.place || 'Оберіть місце'}</option>
+                    <select name="place" value={form.place} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
+                       <option value={form.place} >{form.place || 'Оберіть місце'}</option>
                         {lookupPlaces?.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
@@ -234,7 +227,7 @@ const EditPage: React.FC = () => {
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.AUTHOR}</label>
                     <select name="author" onChange={e => handleChange(e, 'author')} style={{ flex: 1 }}>
-                        <option value={form.messageAuthor?.name || ''} >{form.messageAuthor?.name || 'Оберіть автора'}</option>
+                        <option value={form.messageAuthor?.id} >{form.messageAuthor?.name || 'Оберіть автора'}</option>
                         {userOptions.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
