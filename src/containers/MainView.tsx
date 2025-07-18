@@ -7,6 +7,7 @@ import { TABLE_COLUMNS } from '../constants/tableColumns';
 import { TableRow } from '../types/table';
 import DeleteConfirmation from '../components/DeleteConformation';
 import ColumnSort from '../components/ColumnSort';
+import FiltersModal from '../components/filtersModal';
 import '../containers/styles/mainView.scss';
 
 const MainView: React.FC = () => {
@@ -149,11 +150,22 @@ const MainView: React.FC = () => {
       </button>
       <button
         className="main-view-btn"
-        onClick={() => navigate('/filter')}
+        onClick={() => actionToNavigate === 'filter' ? setActionToNavigate('') : setActionToNavigate('filter')}
       >
         <span role="img" aria-label="Фільтр" style={{ marginRight: 8 }}>🔍</span>
         Фільтр
       </button>
+      {actionToNavigate === 'filter' && (
+        <FiltersModal
+          open={true}
+          onClose={() => setActionToNavigate('')}
+          onApply={(filters) => {
+            console.log('Applied filters:', filters);
+            fetchTableData({page: currentPage, filter: filters });
+            setActionToNavigate('');
+          }}
+        />
+      )}
       <button
         className="main-view-btn"
         onClick={handleLogout}

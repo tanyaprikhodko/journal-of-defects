@@ -182,7 +182,7 @@ export interface TableState {
   lookupPlaces?: Array<{ id: number; name: string }>;
   usersByRegionId?: Record<string, Person[]>;
   substations?: Substation[];
-  fetchTableData: (params: { page?: number; sortBy?: string; order?: string }) => Promise<void>;
+  fetchTableData: (params: { page?: number; sortBy?: string; order?: string; filter?: { [key: string]: string } }) => Promise<void>;
   fetchTableDataById: (id: number) => Promise<void>;
   getCommentsById: (id: number) => Promise<void>;
   addComment: (comment: CommentRequest) => Promise<void>;
@@ -207,6 +207,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         page: params?.page ? params.page.toString() : get().currentPage?.toString() || '1',
         ColumnName: params?.sortBy || '',
         IsAscending: params?.order === 'asc' ? 'true' : 'false',
+        ...params.filter ? params.filter : '',
       });
       const response = await fetch(`http://localhost:5188/api/Journals?${searchParams.toString()}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},

@@ -114,7 +114,7 @@ const EditPage: React.FC = () => {
             ...field === 'substationRegion' && { substationRegionId: e.target.value },
             ...field === 'place' && { placeId: Number(e.target.value) },
             ...field === 'objectType' && { objectTypeId: Number(e.target.value) },
-            ...field === 'author' && { messageAuthorId: 1 },
+            ...field === 'author' && { messageAuthorId: 1 },// TODO: replace with actual author ID
         }));
     }
 

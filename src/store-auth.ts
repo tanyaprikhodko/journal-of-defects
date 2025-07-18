@@ -118,13 +118,20 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       const accessToken = localStorage.getItem('accessToken');
+      if (!refreshToken) {
+        set({ isAuthenticated: false, currentUser: null });
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        console.log('No refresh token found');
+        return false;
+      }
       const response = await fetch('http://localhost:5188/api/Authentication/refresh-token', {
         method: 'POST',
          headers: {
           'Content-Type': 'application/json',
           ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
         },
-        body: JSON.stringify({ refreshToken })
+        body: JSON.stringify({ refreshToken: refreshToken ? refreshToken : '' })
       });
       if (response.ok) {
         const { accessToken, refreshToken } = await response.json();
