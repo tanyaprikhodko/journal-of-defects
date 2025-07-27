@@ -6,7 +6,6 @@ import NotFoundPage from './containers/NotFoundPage';
 import EditPage from './containers/EditPage';
 
 const isAuthenticated = () => {
-    // Replace this with your actual authentication logic
     return localStorage.getItem('accessToken') !== null;
 };
 

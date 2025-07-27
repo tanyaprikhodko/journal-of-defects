@@ -88,7 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchUsers: async (departmentId) => {
     try {
       const url = departmentId
-        ? `http://localhost:5188/api/Users?departmentId=${departmentId ??  localStorage.getItem('departmentId')}`
+        ? `http://localhost:5188/api/Users/by-region/${departmentId ??  localStorage.getItem('departmentId')}`
         : 'http://localhost:5188/api/Users';
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch users');

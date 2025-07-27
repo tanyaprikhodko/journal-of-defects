@@ -7,7 +7,7 @@ import { TABLE_COLUMNS } from '../constants/tableColumns';
 import { TableRow } from '../types/table';
 import DeleteConfirmation from '../components/DeleteConformation';
 import ColumnSort from '../components/ColumnSort';
-import FiltersModal from '../components/filtersModal';
+import FiltersModal from '../components/FiltersModal';
 import '../containers/styles/mainView.scss';
 
 const MainView: React.FC = () => {
@@ -157,7 +157,7 @@ const MainView: React.FC = () => {
       </button>
       {actionToNavigate === 'filter' && (
         <FiltersModal
-          open={true}
+          open={actionToNavigate === 'filter'}
           onClose={() => setActionToNavigate('')}
           onApply={(filters) => {
             console.log('Applied filters:', filters);

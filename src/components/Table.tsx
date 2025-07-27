@@ -36,7 +36,7 @@ const Table: React.FC<TableProps> = ({ columns, data, click, activeRowId }) => {
   });
 
   return (
-    <div style={{ overflowY: 'auto', height: '100%' }}>
+    <div style={{ overflowY: 'auto' }}>
       <table style={{borderCollapse: 'collapse', width: '100%', height: '100%'}}>
         <thead>
           {table.getHeaderGroups().map(headerGroup => (
