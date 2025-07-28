@@ -52,7 +52,8 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
       fetchRoles();
       fetchDepartments();
     }
-  }, [visible, fetchRoles, fetchDepartments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]); 
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -77,9 +78,9 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
   // Helper function to check if userData is the default user
   const isDefaultUser = React.useMemo(() => {
     return userData.id === 0 && 
-           userData.name === '' && 
-           userData.email === '' &&
-           userData.login === '';
+           !userData.name && 
+           !userData.email &&
+           !userData.login;
   }, [userData.id, userData.name, userData.email, userData.login]);
 
   const handleUserSelect = async (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -87,7 +88,7 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
     
     if (value === 0 || !value) {
       setSelectedUserId(null);
-      setUserData(defaultUser);
+      setUserData({ ...defaultUser });
       return;
     }
     
@@ -105,7 +106,7 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
       setUserData(preparedData as User);
     } catch (error) {
       console.error('Error fetching user by ID:', error);
-      setUserData(defaultUser);
+      setUserData({ ...defaultUser });
     } finally {
       setLoading(false);
     }
