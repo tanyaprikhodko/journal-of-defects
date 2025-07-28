@@ -182,6 +182,7 @@ export interface TableState {
   lookupPlaces?: Array<{ id: number; name: string }>;
   usersByRegionId?: Record<string, Person[]>;
   substations?: Substation[];
+  roles?: Array<{ id: number; name: string }>;
   fetchTableData: (params: { page?: number; sortBy?: string; order?: string; filter?: { [key: string]: string } }) => Promise<void>;
   fetchTableDataById: (id: number) => Promise<void>;
   getCommentsById: (id: number) => Promise<void>;
@@ -192,6 +193,10 @@ export interface TableState {
   fetchUsersByRegionId: (regionId: string) => Promise<void>;
   deleteJournal: (id: number) => Promise<void>;
   createJournal: (journal: createJournalPayload, isEditMode: boolean, id: number | null) => Promise<void>;
+  fetchRoles: () => Promise<void>;
+  deleteUser: (userId: number) => Promise<void>;
+  addUser: (user: Partial<Person>) => Promise<void>;
+  editUser: (userId: number, user: Partial<Person>) => Promise<void>;
 }
 
 export const useTableStore = create<TableState>((set, get) => ({
@@ -393,4 +398,72 @@ export const useTableStore = create<TableState>((set, get) => ({
       throw error;
     }
   },
+  
+  fetchRoles: async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5188/api/Lookups/roles', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to fetch roles');
+      const roles = await response.json();
+      set({ roles });
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      set({ roles: [] });
+    }
+  },
+
+  deleteUser: async (userId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5188/api/Users/${userId}`, {
+        method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to delete user');
+      // Optionally, refresh users list or update state here
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
+  },
+
+  addUser: async (user: Partial<Person>) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5188/api/Users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(user),
+      });
+      if (!response.ok) throw new Error('Failed to add user');
+      // Optionally, refresh users list or update state here
+    } catch (error) {
+      console.error('Error adding user:', error);
+      throw error;
+    }
+  },
+
+  editUser: async (userId: number, user: Partial<Person>) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5188/api/Users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(user),
+      });
+      if (!response.ok) throw new Error('Failed to edit user');
+      // Optionally, refresh users list or update state here
+    } catch (error) {
+      console.error('Error editing user:', error);
+      throw error;
+    }
+  }
 }));

@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
-import {
-  Modal,
-  Box,
-  Button,
-  TextField,
-  Typography,
-  MenuItem,
-} from '@mui/material';
 import { useTableStore } from '../store-zustand';
 import { useAuthStore } from '../store-auth';
+import './styles/filtersModal.css';
 
 
 type FiltersModalProps = {
@@ -44,7 +37,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   }, [fetchObjectTypes, fetchLookupPlaces, fetchUsers, fetchSubstations]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setValues((prev) => ({
@@ -67,324 +60,306 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   };
 
   return (
-    <Modal open={isOpen} onClose={() => (isOpen = false, onClose())}>
-      <Box
-        sx={{
-          bgcolor: 'background.paper',
-          p: 4,
-          borderRadius: 2,
-          maxWidth: 600,
-          maxHeight: '80vh',
-          my: '10vh',
-          mx: 'auto',
-        }}
+    <div className={`modal-backdrop ${isOpen ? 'open' : ''}`} onClick={() => {isOpen = false; onClose();}}>
+      <div
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
       >
-        <Typography
-          variant="h6"
-          mb={2}
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          Filter Options
-          <Button
+        <div className="modal-header">
+          <h2>Filter Options</h2>
+          <button
             onClick={() => {isOpen = false; onClose();}}
-            sx={{
-              color: '#000',
-              fontSize: 24,
-              marginLeft: 'auto',
-            }}
+            className="close-button"
             aria-label="Close"
           >
             ×
-          </Button>
-        </Typography>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            maxHeight: '50vh',
-            overflowY: 'auto',
-            justifyContent: 'space-between',
-            padding: '8px',
-          }}
-        >
-          <TextField
-            select
-            label="Стан дефекту"
-            name="Condition"
-            value={values.Condition ?? ''}
-            onChange={handleChange}
-            fullWidth
-            placeholder="Оберіть стан дефекту"
-            style={{ flex: '1 1 45%' }}
-          >
-            <MenuItem value="">Всі стани</MenuItem>
-            <MenuItem value="Внесений">Внесений</MenuItem>
-            <MenuItem value="Розглянутий технічним керівником">
-              Розглянутий технічним керівником
-            </MenuItem>
-            <MenuItem value="Прийнятий до виконання">
-              Прийнятий до виконання
-            </MenuItem>
-            <MenuItem value="Усунутий">Усунутий</MenuItem>
-            <MenuItem value="Протермінований">Протермінований</MenuItem>
-            <MenuItem value="Прийнятий в експлуатацію">
-              Прийнятий в експлуатацію
-            </MenuItem>
-          </TextField>
-          <TextField
-            label="Номер"
-            name="Order"
-            type="number"
-            value={values.Order ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-          />
-          <TextField
-            label="Дата реєстрації"
-            name="DateOfRegistration"
-            type="date"
-            value={values.DateOfRegistration ?? ''}
-            onChange={handleChange}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            style={{ flex: '1 1 45%' }}
-          />
-          <TextField
-            select
-            label="Тип об'єкта"
-            name="ObjectType"
-            value={values.ObjectType ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть тип об'єкта"
-          >
-            <MenuItem value="">Всі типи</MenuItem>
-            {objectTypes && objectTypes.map((type: { id?: number; type: string }) => (
-              <MenuItem key={type.id ?? type.type ?? type} value={type.id ?? type.type ?? type}>
-                {type.type}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="Номер об'єкта"
-            name="ObjectNumber"
-            type="number"
-            value={values.ObjectNumber ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-          />
-          {/* Lookup Place select */}
-          <TextField
-            select
-            label="Місце"
-            name="Place"
-            value={values.Place ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть місце"
-          >
-            <MenuItem value="">Всі місця</MenuItem>
-            {lookupPlaces && lookupPlaces.map((place: { id?: number; name: string }) => (
-              <MenuItem key={place.id ?? place.name ?? place} value={place.id ?? place.name ?? place}>
-                {place.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="Приєднання"
-            name="Connection"
-            value={values.Connection ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-          />
-          <TextField
-            label="Суть дефекту"
-            name="Description"
-            value={values.Description ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-          />
-          <TextField
-            select
-            label="Автор повідомлення"
-            name="MessageAuthor"
-            value={values.MessageAuthor ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть автора"
-          >
-            <MenuItem value="">Всі автори</MenuItem>
-            {users && users.map((user: { id: number; name: string }) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            label="Відповідальний за усунення"
-            name="Responsible"
-            value={values.Responsible ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть відповідального"
-          >
-            <MenuItem value="">Всі відповідальні</MenuItem>
-            {users && users.map((user: { id: number; name: string }) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="Термін виконання"
-            name="CompletionTerm"
-            type="date"
-            value={values.CompletionTerm ?? ''}
-            onChange={handleChange}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            style={{ flex: '1 1 45%' }}
-          />
-          <TextField
-            select
-            label="Технічний керівник"
-            name="TechnicalManager"
-            value={values.TechnicalManager ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть технічного керівника"
-          >
-            <MenuItem value="">Всі керівники</MenuItem>
-            {users && users.map((user: { id: number; name: string }) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="Дата прийняття"
-            name="DateOfAcception"
-            type="date"
-            value={values.DateOfAcception ?? ''}
-            onChange={handleChange}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            style={{ flex: '1 1 45%' }}
-          />
-          <TextField
-            select
-            label="Прийняв в експлуатацію"
-            name="AcceptionAuthor"
-            value={values.AcceptionAuthor ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть прийнявшого"
-          >
-            <MenuItem value="">Всі</MenuItem>
-            {users && users.map((user: { id: number; name: string }) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="Дата виконання"
-            name="DateOfCompletion"
-            type="date"
-            value={values.DateOfCompletion ?? ''}
-            onChange={handleChange}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            style={{ flex: '1 1 45%' }}
-          />
-          <TextField
-            select
-            label="Виконав"
-            name="CompletionAuthor"
-            value={values.CompletionAuthor ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть виконавця"
-          >
-            <MenuItem value="">Всі</MenuItem>
-            {users && users.map((user: { id: number; name: string }) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            label="Прийняв до виконання"
-            name="ConfirmationAuthor"
-            value={values.ConfirmationAuthor ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть підтверджуючого"
-          >
-            <MenuItem value="">Всі</MenuItem>
-            {users && users.map((user: { id: number; name: string }) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="Дата прийняття до виконання"
-            name="DateOfConfirmation"
-            type="date"
-            value={values.DateOfConfirmation ?? ''}
-            onChange={handleChange}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            style={{ flex: '1 1 45%' }}
-          />
-          <TextField
-            select
-            label="Підстанція"
-            name="Substation"
-            value={values.Substation ?? ''}
-            onChange={handleChange}
-            fullWidth
-            style={{ flex: '1 1 45%' }}
-            placeholder="Оберіть підстанцію"
-          >
-            <MenuItem value="">Всі підстанції</MenuItem>
-            {substations && substations.map((substation: { id?: string; name: string }) => (
-              <MenuItem key={substation.id ?? substation.name ?? substation} value={substation.id ?? substation.name ?? substation}>
-                {substation.name}
-              </MenuItem>
-            ))}
-          </TextField>
+          </button>
         </div>
-        <Box
-          mt={3}
-          display="flex"
-          justifyContent="flex-end"
-          gap={2}
-          width="100%"
-        >
-          <Button onClick={handleReset}>Reset</Button>
-          <Button variant="contained" onClick={handleApply}>
+        <div className="form-container">
+          <div className="form-field">
+            <label htmlFor="Condition">Стан дефекту</label>
+            <select
+              id="Condition"
+              name="Condition"
+              value={values.Condition ?? ''}
+              onChange={(e) => handleChange(e)}
+              className="form-select"
+            >
+              <option value="">Всі стани</option>
+              <option value="Внесений">Внесений</option>
+              <option value="Розглянутий технічним керівником">
+                Розглянутий технічним керівником
+              </option>
+              <option value="Прийнятий до виконання">
+                Прийнятий до виконання
+              </option>
+              <option value="Усунутий">Усунутий</option>
+              <option value="Протермінований">Протермінований</option>
+              <option value="Прийнятий в експлуатацію">
+                Прийнятий в експлуатацію
+              </option>
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="Order">Номер</label>
+            <input
+              id="Order"
+              name="Order"
+              type="number"
+              value={values.Order ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="DateOfRegistration">Дата реєстрації</label>
+            <input
+              id="DateOfRegistration"
+              name="DateOfRegistration"
+              type="date"
+              value={values.DateOfRegistration ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="ObjectType">Тип об'єкта</label>
+            <select
+              id="ObjectType"
+              name="ObjectType"
+              value={values.ObjectType ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі типи</option>
+              {objectTypes && objectTypes.map((type: { id?: number; type: string }) => (
+                <option key={type.id ?? type.type ?? type} value={type.id ?? type.type ?? type}>
+                  {type.type}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="ObjectNumber">Номер об'єкта</label>
+            <input
+              id="ObjectNumber"
+              name="ObjectNumber"
+              type="number"
+              value={values.ObjectNumber ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          {/* Lookup Place select */}
+          <div className="form-field">
+            <label htmlFor="Place">Місце</label>
+            <select
+              id="Place"
+              name="Place"
+              value={values.Place ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі місця</option>
+              {lookupPlaces && lookupPlaces.map((place: { id?: number; name: string }) => (
+                <option key={place.id ?? place.name ?? place} value={place.id ?? place.name ?? place}>
+                  {place.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="Connection">Приєднання</label>
+            <input
+              id="Connection"
+              name="Connection"
+              value={values.Connection ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="Description">Суть дефекту</label>
+            <input
+              id="Description"
+              name="Description"
+              value={values.Description ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="MessageAuthor">Автор повідомлення</label>
+            <select
+              id="MessageAuthor"
+              name="MessageAuthor"
+              value={values.MessageAuthor ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі автори</option>
+              {users && users.map((user: { id: number; name: string }) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="Responsible">Відповідальний за усунення</label>
+            <select
+              id="Responsible"
+              name="Responsible"
+              value={values.Responsible ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі відповідальні</option>
+              {users && users.map((user: { id: number; name: string }) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="CompletionTerm">Термін виконання</label>
+            <input
+              id="CompletionTerm"
+              name="CompletionTerm"
+              type="date"
+              value={values.CompletionTerm ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="TechnicalManager">Технічний керівник</label>
+            <select
+              id="TechnicalManager"
+              name="TechnicalManager"
+              value={values.TechnicalManager ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі керівники</option>
+              {users && users.map((user: { id: number; name: string }) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="DateOfAcception">Дата прийняття</label>
+            <input
+              id="DateOfAcception"
+              name="DateOfAcception"
+              type="date"
+              value={values.DateOfAcception ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="AcceptionAuthor">Прийняв в експлуатацію</label>
+            <select
+              id="AcceptionAuthor"
+              name="AcceptionAuthor"
+              value={values.AcceptionAuthor ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі</option>
+              {users && users.map((user: { id: number; name: string }) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="DateOfCompletion">Дата виконання</label>
+            <input
+              id="DateOfCompletion"
+              name="DateOfCompletion"
+              type="date"
+              value={values.DateOfCompletion ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="CompletionAuthor">Виконав</label>
+            <select
+              id="CompletionAuthor"
+              name="CompletionAuthor"
+              value={values.CompletionAuthor ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі</option>
+              {users && users.map((user: { id: number; name: string }) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="ConfirmationAuthor">Прийняв до виконання</label>
+            <select
+              id="ConfirmationAuthor"
+              name="ConfirmationAuthor"
+              value={values.ConfirmationAuthor ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі</option>
+              {users && users.map((user: { id: number; name: string }) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="DateOfConfirmation">Дата прийняття до виконання</label>
+            <input
+              id="DateOfConfirmation"
+              name="DateOfConfirmation"
+              type="date"
+              value={values.DateOfConfirmation ?? ''}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="Substation">Підстанція</label>
+            <select
+              id="Substation"
+              name="Substation"
+              value={values.Substation ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі підстанції</option>
+              {substations && substations.map((substation: { id?: string; name: string }) => (
+                <option key={substation.id ?? substation.name ?? substation} value={substation.id ?? substation.name ?? substation}>
+                  {substation.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button onClick={handleReset} className="btn btn-secondary">Reset</button>
+          <button onClick={handleApply} className="btn btn-primary">
             Apply
-          </Button>
-        </Box>
-      </Box>
-    </Modal>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

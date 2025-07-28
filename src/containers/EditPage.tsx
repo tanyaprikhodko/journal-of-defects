@@ -114,7 +114,7 @@ const EditPage: React.FC = () => {
             ...field === 'substationRegion' && { substationRegionId: e.target.value },
             ...field === 'place' && { placeId: Number(e.target.value) },
             ...field === 'objectType' && { objectTypeId: Number(e.target.value) },
-            ...field === 'author' && { messageAuthorId: 1 },// TODO: replace with actual author ID
+            ...field === 'author' && { messageAuthorId: Number(e.target.value) },
         }));
     }
 
@@ -135,7 +135,6 @@ const EditPage: React.FC = () => {
                 </button>
             </div>
             <div className="edit-form-container">
-                    {<p style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(form, null, 2)}</p>}
             <form className="edit-form" onSubmit={handleSubmit}> 
                 {/* condition: select */}
                 <div className="edit-row">

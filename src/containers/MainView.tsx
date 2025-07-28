@@ -8,7 +8,9 @@ import { TableRow } from '../types/table';
 import DeleteConfirmation from '../components/DeleteConformation';
 import ColumnSort from '../components/ColumnSort';
 import FiltersModal from '../components/FiltersModal';
+import UsersAdminModal from '../components/UsersAdminModal';
 import '../containers/styles/mainView.scss';
+import { parseJwt } from '../utils';
 
 const MainView: React.FC = () => {
   const tableColumns = [
@@ -38,6 +40,14 @@ const MainView: React.FC = () => {
   const fetchTableData = useTableStore(state => state.fetchTableData);
   const deleteJournal = useTableStore(state => state.deleteJournal);
   const logout = useAuthStore(state => state.logout);
+  const users = useAuthStore(state => state.users);
+  const fetchUsers = useAuthStore(state => state.fetchUsers);
+  const addUser = useTableStore(state => state.addUser);
+  const editUser = useTableStore(state => state.editUser);
+  const deleteUser = useTableStore(state => state.deleteUser);
+  const jwt = localStorage.getItem('accessToken');
+  const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
+
 
   const [actionToNavigate, setActionToNavigate] = React.useState<string>('');
   const [selectedJournalId, setSelectedJournalId] = React.useState<number | null>(null);
@@ -66,7 +76,8 @@ const MainView: React.FC = () => {
 
   React.useEffect(() => {
     fetchTableData({ page: 1 });
-  }, [fetchTableData]);
+    fetchUsers();
+  }, [fetchTableData, fetchUsers]);
 
   const clickHandler = (id: number) => {
     setSelectedJournalId(id);
@@ -164,6 +175,35 @@ const MainView: React.FC = () => {
             fetchTableData({page: currentPage, filter: filters });
             setActionToNavigate('');
           }}
+        />
+      )}
+      {currentUserRole.includes('Адміністратор') && (
+        <button
+          className="main-view-btn"
+          onClick={() => actionToNavigate === 'users-admin' ? setActionToNavigate('') : setActionToNavigate('users-admin')}
+        >
+          <span role="img" aria-label="Користувачі" style={{ marginRight: 8 }}>👥</span>
+          Користувачі
+        </button>
+      )}
+      {actionToNavigate === 'users-admin' && (
+        <UsersAdminModal
+          visible={actionToNavigate === 'users-admin'}
+          onClose={() => setActionToNavigate('')}
+          onSave={(user) => {
+            editUser(user.id, user);
+            setActionToNavigate('');
+          }}
+          onRemove={(userId) => {
+            deleteUser(userId);
+            setActionToNavigate('');
+
+          }}
+          onAdd={(user) => {
+            addUser(user);
+            setActionToNavigate('');
+          }}
+          users={users}
         />
       )}
       <button

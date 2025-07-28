@@ -12,6 +12,23 @@ export interface Department {
   name: string;
 }
 
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+  secondEmail: string;
+  login: string;
+  password: string;
+  rank: string;
+  deputyId: number;
+  regionId: string;
+  roleIds: number[];
+  isActive: boolean;
+  isLocked: boolean;
+  userMessage: string;
+  userRoles: {id: number; name: string}[];
+};
+
 export interface AuthState {
   departments: Department[];
   users: AuthUser[];
@@ -24,6 +41,7 @@ export interface AuthState {
   fetchUsers: (departmentId?: string) => Promise<void>;
   fetchDepartments: () => Promise<void>;
   refreshTokenAsync: () => Promise<boolean>;
+  fetchUserById: (id: number) => Promise<User | null>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -47,26 +65,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (refreshToken) {
           localStorage.setItem('refreshToken', refreshToken);
         }
-        const parseJwt = (token: string) => {
-          try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(
-              atob(base64)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-            );
-            return JSON.parse(jsonPayload);
-          } catch {
-            return null;
-          }
-        };
+        set({ isAuthenticated: true });
 
-        console.log('Parsed JWT:', parseJwt(accessToken), user);
-
-        // const userInfo = accessToken ? parseJwt(accessToken) : null;
-        set({ isAuthenticated: true, currentUser: user });
         return true;
       } else {
         set({ isAuthenticated: false, currentUser: null });
@@ -99,6 +99,28 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ users });
     } catch {
       set({ users: [] });
+    }
+  },
+  fetchUserById: async (id: number): Promise<User | null> => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5188/api/Users/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch user');
+      const user = await response.json();
+      set((state) => ({
+        users: state.users.map((u) => (u.id === id ? user : u)),
+      }));
+
+      return user;
+    } catch {
+      set({ users: [] });
+      return null;
     }
   },
   fetchDepartments: async () => {
