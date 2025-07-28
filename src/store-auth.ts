@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { toast } from 'react-toastify';
 
 export interface AuthUser {
   id: number;
@@ -66,14 +67,16 @@ export const useAuthStore = create<AuthState>((set) => ({
           localStorage.setItem('refreshToken', refreshToken);
         }
         set({ isAuthenticated: true });
-
+        toast.success('Успішний вхід до системи');
         return true;
       } else {
         set({ isAuthenticated: false, currentUser: null });
+        toast.error('Невірний логін або пароль');
         return false;
       }
     } catch {
       set({ isAuthenticated: false, currentUser: null });
+      toast.error('Помилка під час входу до системи');
       return false;
     }
   },
@@ -99,6 +102,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ users });
     } catch {
       set({ users: [] });
+      toast.error('Помилка завантаження користувачів');
     }
   },
   fetchUserById: async (id: number): Promise<User | null> => {
@@ -120,6 +124,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       return user;
     } catch {
       set({ users: [] });
+      toast.error('Помилка завантаження користувача');
       return null;
     }
   },
@@ -134,6 +139,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ departments });
     } catch {
       set({ departments: [] });
+      toast.error('Помилка завантаження відділів');
     }
   },
   refreshTokenAsync: async () => {
@@ -168,12 +174,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ isAuthenticated: false, currentUser: null });
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        toast.error('Сесія закінчилася. Увійдіть знову');
         return false;
       }
     } catch {
       set({ isAuthenticated: false, currentUser: null });
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      toast.error('Помилка оновлення токену');
       return false;
     }
   },

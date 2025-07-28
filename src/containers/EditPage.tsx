@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import './styles/edit.scss';
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import { useAuthStore } from '../store-auth';
 import { useTableStore, TableRow, CommentRequest, createJournalPayload } from '../store-zustand';
 import 'react-toastify/dist/ReactToastify.css';
@@ -103,7 +103,6 @@ const EditPage: React.FC = () => {
             ...isEditMode && changedFields.includes('comments') ? { comments: commentsToAdd || [] } : {},
         };
         await createJournal(payload, isEditMode, id ? Number(id) : null);
-        await toast.success('Збережено успішно!', { autoClose: 100 });
         navigate('/main-view');
     };
 

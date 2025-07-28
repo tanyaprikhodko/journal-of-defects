@@ -1,6 +1,7 @@
 import React from 'react';
 import Table from '../components/Table';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 import { useTableStore } from '../store-zustand';
 import { useAuthStore } from '../store-auth';
 import { TABLE_COLUMNS } from '../constants/tableColumns';
@@ -10,6 +11,7 @@ import ColumnSort from '../components/ColumnSort';
 import FiltersModal from '../components/FiltersModal';
 import UsersAdminModal from '../components/UsersAdminModal';
 import '../containers/styles/mainView.scss';
+import 'react-toastify/dist/ReactToastify.css';
 import { parseJwt } from '../utils';
 
 const MainView: React.FC = () => {
@@ -249,6 +251,7 @@ const MainView: React.FC = () => {
          <ColumnSort onChange={(sortBy, order) => fetchTableData({ sortBy, order })} />
         </div>
       </footer>
+      <ToastContainer position="top-center" />
     </div>
   );
 };

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 import { useAuthStore } from '../store-auth';
 import './styles/authorization.scss';
+import 'react-toastify/dist/ReactToastify.css';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 
@@ -125,6 +127,7 @@ const AuthorizeContainer: React.FC = () => {
                 <span className='button-icon'>🔑</span>
                 </button>
             </form>
+            <ToastContainer position="top-center" />
         </div>
     );
 };

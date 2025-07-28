@@ -1,86 +1,6 @@
 import { create } from 'zustand';
+import { toast } from 'react-toastify';
 import { parseJwt } from './utils';
-
-// export interface FormData {
-//   defectState: string;
-//   number: number | null;
-//   createdAt: string | Date;
-//   object: string;
-//   substation: string;
-//   placeOfDefect: string;
-//   connection: string;
-//   essenceOfDefect: string;
-//   author: string;
-//   techLead: string;
-//   responsibleRorElimination: string;
-//   timeOfElimination: string | Date;
-//   dateOfAccepting: string | Date;
-//   acceptedPerson: string;
-//   dateOfElimination: string | Date;
-//   eliminated: string;
-//   dateOfStartExploitation: string | Date;
-//   acceptedExploitationPerson: string;
-//   moveTo: string;
-//   comments: string[];
-// }
-
-// export const initialFormData: FormData = {
-//   defectState: '',
-//   number: null,
-//   createdAt: '',
-//   object: '',
-//   substation: '',
-//   placeOfDefect: '',
-//   connection: '',
-//   essenceOfDefect: '',
-//   author: '',
-//   techLead: '',
-//   responsibleRorElimination: '',
-//   timeOfElimination: '',
-//   dateOfAccepting: '',
-//   acceptedPerson: '',
-//   dateOfElimination: '',
-//   eliminated: '',
-//   dateOfStartExploitation: '',
-//   acceptedExploitationPerson: '',
-//   moveTo: '',
-//   comments: [],
-// };
-
-// interface EditPageState {
-//   savedForms: Record<string, FormData>;
-//   setForm: (id: string, form: FormData) => void;
-//   getForm: (id: string) => FormData;
-//   fetchFormData: (id: string) => Promise<void>;
-// }
-
-// export const useEditPageStore = create<EditPageState>((set, get) => ({
-//   savedForms: {},
-//   setForm: (id, form) => set(state => ({
-//     savedForms: { ...state.savedForms, [id]: form }
-//   })),
-//   getForm: (id) => get().savedForms[id] || initialFormData,
-//   fetchFormData: async (id) => {
-//     try {
-//       const token = localStorage.getItem('accessToken');
-//       const response = await fetch(`http://localhost:5188/api/Journals/${id}`, {
-//         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-//       });
-//       if (!response.ok) throw new Error('Failed to fetch form data');
-//       const data = await response.json();
-//       // Ensure the fetched data matches FormData shape
-//       set(state => ({
-//         savedForms: { ...state.savedForms, [id]: {
-//           ...initialFormData,
-//           ...data,
-//           comments: Array.isArray(data.comments) ? data.comments : [],
-//         } }
-//       }));
-//     } catch {
-//       // Optionally handle error
-//     }
-//   },
-// }));
 
 export interface createJournalPayload {
   order?: number | null;
@@ -230,6 +150,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       set({ totalPages: data.totalPages, currentPage: data.currentPage });
     } catch (error) {
       console.error('Error fetching table data:', error);
+      toast.error('Помилка завантаження даних таблиці');
       set({ tableData: [] });
     }
   },
@@ -248,6 +169,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Error fetching table data by ID:', error);
+      toast.error('Помилка завантаження деталей запису');
     }
   },
 
@@ -264,6 +186,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Error fetching comments:', error);
+      toast.error('Помилка завантаження коментарів');
       set(state => ({
         commentsById: { ...state.commentsById, [id]: [] },
       }));
@@ -292,8 +215,10 @@ export const useTableStore = create<TableState>((set, get) => ({
           [comment.journalId]: [...(state.commentsById?.[comment.journalId] || []), newComment],
         },
       }));
+      toast.success('Коментар успішно додано');
     } catch (error) {
       console.error('Error posting comment:', error);
+      toast.error('Помилка додавання коментаря');
     }
   },
 
@@ -308,6 +233,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       set({ objectTypes: data });
     } catch (error) {
       console.error('Error fetching object types:', error);
+      toast.error('Помилка завантаження типів об\'єктів');
     }
   },
 
@@ -322,6 +248,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       set({ lookupPlaces: data });
     } catch (error) {
       console.error('Error fetching lookup places:', error);
+      toast.error('Помилка завантаження місць дефектів');
     }
   },
 
@@ -342,6 +269,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
     } catch (error) {
       console.error('Error fetching users by region ID:', error);
+      toast.error('Помилка завантаження користувачів регіону');
       set({ usersByRegionId: {} });
     }
   },
@@ -357,6 +285,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       set({ substations: data });
     } catch (error) {
       console.error('Error fetching substations:', error);
+      toast.error('Помилка завантаження підстанцій');
     }
  },
 
@@ -370,8 +299,10 @@ export const useTableStore = create<TableState>((set, get) => ({
       if (!response.ok) throw new Error('Failed to delete journal');
       // Optionally refresh table data after deletion
       await get().fetchTableData({ page: get().currentPage });
+      toast.success('Запис успішно видалено');
     } catch (error) {
       console.error('Error deleting journal:', error);
+      toast.error('Помилка видалення запису');
       throw error;
     }
   },
@@ -393,8 +324,10 @@ export const useTableStore = create<TableState>((set, get) => ({
         tableData: [...state.tableData, newJournal],
         tableDataById: { ...state.tableDataById, [newJournal.id]: newJournal },
       }));
+      toast.success(isEditMode ? 'Запис успішно оновлено' : 'Запис успішно створено');
     } catch (error) {
       console.error('Error creating journal:', error);
+      toast.error(isEditMode ? 'Помилка оновлення запису' : 'Помилка створення запису');
       throw error;
     }
   },
@@ -410,6 +343,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       set({ roles });
     } catch (error) {
       console.error('Error fetching roles:', error);
+      toast.error('Помилка завантаження ролей');
       set({ roles: [] });
     }
   },
@@ -422,9 +356,11 @@ export const useTableStore = create<TableState>((set, get) => ({
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to delete user');
+      toast.success('Користувач успішно видалений');
       // Optionally, refresh users list or update state here
     } catch (error) {
       console.error('Error deleting user:', error);
+      toast.error('Помилка видалення користувача');
       throw error;
     }
   },
@@ -441,9 +377,11 @@ export const useTableStore = create<TableState>((set, get) => ({
         body: JSON.stringify(user),
       });
       if (!response.ok) throw new Error('Failed to add user');
+      toast.success('Користувач успішно доданий');
       // Optionally, refresh users list or update state here
     } catch (error) {
       console.error('Error adding user:', error);
+      toast.error('Помилка додавання користувача');
       throw error;
     }
   },
@@ -460,9 +398,11 @@ export const useTableStore = create<TableState>((set, get) => ({
         body: JSON.stringify(user),
       });
       if (!response.ok) throw new Error('Failed to edit user');
+      toast.success('Користувач успішно оновлений');
       // Optionally, refresh users list or update state here
     } catch (error) {
       console.error('Error editing user:', error);
+      toast.error('Помилка редагування користувача');
       throw error;
     }
   }
