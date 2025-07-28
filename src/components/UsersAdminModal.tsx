@@ -12,23 +12,6 @@ type UsersAdminModalProps = {
   onRemove: (userId: number) => void;
 };
 
-const defaultUser: User = {
-  id: 0,
-  name: '',
-  email: '',
-  secondEmail: '',
-  login: '',
-  password: '',
-  rank: '',
-  deputyId: 0,
-  regionId: '',
-  roleIds: [],
-  isActive: true,
-  isLocked: false,
-  userMessage: '',
-  userRoles: [],
-};
-
 const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
   visible,
   users,
@@ -37,79 +20,133 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
   onRemove,
   onAdd,
 }) => {
+  // Create a stable default user inside the component
+  const createDefaultUser = React.useCallback((): User => ({
+    id: 0,
+    name: '',
+    email: '',
+    secondEmail: '',
+    login: '',
+    password: '',
+    rank: '',
+    deputyId: 0,
+    regionId: '',
+    roleIds: [],
+    isActive: true,
+    isLocked: false,
+    userMessage: '',
+    userRoles: [],
+  }), []);
+
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [userData, setUserData] = useState<User>(defaultUser);
+  const [userData, setUserData] = useState<User>(createDefaultUser);
   const [loading, setLoading] = useState(false);
+  const isMountedRef = React.useRef(true);
 
   const fetchUserById = useAuthStore(state => state.fetchUserById);
   const fetchRoles = useTableStore(state => state.fetchRoles);
   const fetchDepartments = useAuthStore(state => state.fetchDepartments);
-  const departments = useAuthStore(state => state.departments || []);
-  const roles = useTableStore(state => state.roles || []);
+  const departments = useAuthStore(state => state.departments) || [];
+  const roles = useTableStore(state => state.roles) || [];
 
   React.useEffect(() => {
-    if (visible) {
-      fetchRoles();
-      fetchDepartments();
+    if (visible && isMountedRef.current) {
+      const loadData = async () => {
+        try {
+          await Promise.all([fetchRoles(), fetchDepartments()]);
+        } catch (error) {
+          console.error('Error loading modal data:', error);
+        }
+      };
+      loadData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]); 
+  }, [visible, fetchRoles, fetchDepartments]); 
 
-  const handleChange = (
+  // Cleanup effect to clear all data on unmount
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const handleChange = React.useCallback((
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    if (!isMountedRef.current) return;
+    
     const { name, value, type, checked } = e.target as HTMLInputElement;
     setUserData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-  };
+  }, []);
 
-  const handleSelectChange = (
+  const handleSelectChange = React.useCallback((
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
+    if (!isMountedRef.current) return;
+    
     const { name, value } = e.target;
     setUserData((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
+  }, []);
 
+  // Simple function to check if userData is default - using useMemo for stability
   const isDefaultUser = React.useMemo(() => {
-    return userData.id === 0 && 
-           !userData.name && 
-           !userData.email &&
-           !userData.login;
+    return userData.id === 0 && !userData.name && !userData.email && !userData.login;
   }, [userData.id, userData.name, userData.email, userData.login]);
 
-  const handleUserSelect = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleRoleChange = React.useCallback((roleId: number, checked: boolean) => {
+    if (isMountedRef.current) {
+      setUserData((prev) => ({
+        ...prev,
+        roleIds: checked
+          ? [...prev.roleIds, roleId]
+          : prev.roleIds.filter((id) => id !== roleId),
+      }));
+    }
+  }, []);
+
+  const handleUserSelect = React.useCallback(async (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = Number(event.target.value);
     
     if (value === 0 || !value) {
-      setSelectedUserId(null);
-      setUserData({ ...defaultUser });
+      if (isMountedRef.current) {
+        setSelectedUserId(null);
+        setUserData(createDefaultUser());
+      }
       return;
     }
     
-    setSelectedUserId(value);
+    if (isMountedRef.current) {
+      setSelectedUserId(value);
+      setLoading(true);
+    }
     
     try {
-      setLoading(true);
       const user = await fetchUserById(value);
 
-      const preparedData = {
-        ...user,
-        roleIds: user?.userRoles?.map(role => role.id) || []
-      };
-
-      setUserData(preparedData as User);
+      if (isMountedRef.current) {
+        const preparedData = {
+          ...user,
+          roleIds: user?.userRoles?.map(role => role.id) || []
+        };
+        setUserData(preparedData as User);
+      }
     } catch (error) {
       console.error('Error fetching user by ID:', error);
-      setUserData({ ...defaultUser });
+      if (isMountedRef.current) {
+        setUserData(createDefaultUser());
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [fetchUserById, createDefaultUser]);
 
   return (
     <div className={`modal ${visible ? 'modal-open' : ''}`}>
@@ -256,15 +293,7 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
                         name="roleIds"
                         value={String(role.id)}
                         checked={userData.roleIds.includes(role.id)}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setUserData((prev) => ({
-                            ...prev,
-                            roleIds: checked
-                              ? [...prev.roleIds, role.id]
-                              : prev.roleIds.filter((id) => id !== role.id),
-                          }));
-                        }}
+                        onChange={(e) => handleRoleChange(role.id, e.target.checked)}
                         disabled={loading}
                       />
                       <span className="checkbox-text">{role.name}</span>
