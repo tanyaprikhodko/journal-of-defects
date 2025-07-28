@@ -7,6 +7,7 @@ import { useTableStore, TableRow, CommentRequest, createJournalPayload } from '.
 import 'react-toastify/dist/ReactToastify.css';
 import CommentsModal from '../components/CommentsModal';
 import { TABLE_COLUMNS, INITIAL_ROW_DATA } from '../constants/tableColumns';
+import { parseJwt } from '../utils';
 
 
 const EditPage: React.FC = () => {
@@ -29,6 +30,11 @@ const EditPage: React.FC = () => {
     const fetchUsers = useAuthStore(state => state.fetchUsers);
     const fetchSubstations = useTableStore(state => state.fetchSubstations);
     const tableDataById = useTableStore.getState().tableDataById;
+    const jwt = localStorage.getItem('accessToken');
+    const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
+    const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
+
+    console.log('Current user ID:', currentUserId);
 
     const [form, setForm] = React.useState<TableRow>({} as TableRow);
     const [commentsToAdd, setCommentsToAdd] = React.useState<CommentRequest[]>([]);
@@ -280,10 +286,16 @@ const EditPage: React.FC = () => {
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_PERSON}</label>
                     <select name="confirmedBy" onChange={e => handleChange(e, 'confirmedBy')} style={{ flex: 1 }}>
-                        <option value={form.confirmedBy?.name || ''}>{form.confirmedBy?.name || 'Оберіть особу'}</option>
-                        {userOptions.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
-                        ))}
+                        {!currentUserRole.includes('Адміністратор') && (
+                            <option value={form.confirmedBy?.id || currentUserId || ''}>
+                                {form.confirmedBy?.name || userOptions.filter(user=> user.id == currentUserId).map(user => user.name) || 'Оберіть особу'}
+                            </option>
+                        )}
+                        {currentUserRole.includes('Адміністратор') && userOptions
+                            .map(option => (
+                                <option key={option.id} value={option.id}>{option.name}</option>
+                            ))
+                        }
                     </select>
                 </div>
                 {/* completionDate: date picker */}
@@ -302,10 +314,16 @@ const EditPage: React.FC = () => {
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ELIMINATED}</label>
                     <select name="completedBy"  onChange={e => handleChange(e, 'completedBy')} style={{ flex: 1 }}>
-                        <option value={form.completedBy?.name || ''}>{form.completedBy?.name || 'Оберіть особу'}</option>
-                        {userOptions.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
-                        ))}
+                        {!currentUserRole.includes('Адміністратор') && (
+                            <option value={form.completedBy?.id || currentUserId || ''}>
+                                {form.completedBy?.name || userOptions.filter(user=> user.id == currentUserId).map(user => user.name) || 'Оберіть особу'}
+                            </option>
+                        )}
+                        {currentUserRole.includes('Адміністратор') && userOptions
+                            .map(option => (
+                                <option key={option.id} value={option.id}>{option.name}</option>
+                            ))
+                        }
                     </select>
                 </div>
                 {/* confirmationDate: date picker */}

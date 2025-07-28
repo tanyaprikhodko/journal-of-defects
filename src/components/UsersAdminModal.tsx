@@ -75,7 +75,6 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
     }));
   };
 
-  // Helper function to check if userData is the default user
   const isDefaultUser = React.useMemo(() => {
     return userData.id === 0 && 
            !userData.name && 
