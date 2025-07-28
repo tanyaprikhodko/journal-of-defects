@@ -33,6 +33,15 @@ const EditPage: React.FC = () => {
     const jwt = localStorage.getItem('accessToken');
     const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
     const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
+    const fetched = tableDataById[Number(id)];
+    const conditionPriority: { [key: string]: number } = {
+        'Внесений': 1,
+        'Прийнятий до виконання': 2,
+        'Усунутий': 3,
+        'Прийнятий в експлуатацію': 4,
+        'Розглянутий технічним керівником': 5,
+        'Протермінований': 6
+    };
 
     const [form, setForm] = React.useState<TableRow>({} as TableRow);
     const [commentsToAdd, setCommentsToAdd] = React.useState<CommentRequest[]>([]);
@@ -57,12 +66,11 @@ const EditPage: React.FC = () => {
     };
 
     React.useEffect(() => {
-        const fetched = tableDataById[Number(id)];
         setForm(
             fetched ??
             ({...INITIAL_ROW_DATA} as TableRow)
         );
-    }, [id, tableDataById]);
+    }, [id, fetched]);
 
     React.useEffect(() => {
         if (!id) return;
@@ -141,13 +149,87 @@ const EditPage: React.FC = () => {
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE}</label>
                     <select name="defectState" onChange={e => handleChange(e, 'condition')} style={{ flex: 1 }}>
+                        {/* Validation by user roles and priorities */}
                         <option value={form.condition || ''}>{form.condition || 'Оберіть стан'}</option>
-                        <option value="Внесений">Внесений</option>
-                        <option value="Розглянутий технічним керівником">Розглянутий технічним керівником</option>
-                        <option value="Прийнятий до виконання">Прийнятий до виконання</option>
-                        <option value="Усунутий">Усунутий</option>
-                        <option value="Протермінований">Протермінований</option>
-                        <option value="Прийнятий в експлуатацію">Прийнятий в експлуатацію</option>
+                        <option
+                            value="Внесений"
+                            disabled={Boolean(
+                                // Only allow if current is null or already 'Внесений'
+                                fetched?.condition && fetched.condition !== 'Внесений'
+                            )}
+                        >
+                            Внесений
+                        </option>
+                        <option
+                            value="Прийнятий до виконання"
+                            disabled={
+                                !(
+                                    currentUserRole.includes('Виконавець') ||
+                                    currentUserRole.includes('Адміністратор')
+                                ) ||
+                                // Only allow if previous is 'Внесений'
+                                conditionPriority[fetched?.condition] !== conditionPriority['Внесений']
+                            }
+                        >
+                            Прийнятий до виконання
+                        </option>
+                        <option
+                            value="Усунутий"
+                            disabled={
+                                !(
+                                    currentUserRole.includes('Виконавець') ||
+                                    currentUserRole.includes('Адміністратор') ||
+                                    currentUserRole.includes('Диспетчер') ||
+                                    currentUserRole.includes('Старший Диспетчер')
+                                ) ||
+                                // Only allow if previous is 'Прийнятий до виконання'
+                                conditionPriority[fetched?.condition] !== conditionPriority['Прийнятий до виконання']
+                            }
+                        >
+                            Усунутий
+                        </option>
+                        <option
+                            value="Прийнятий в експлуатацію"
+                            disabled={
+                                !(
+                                    currentUserRole.includes('Диспетчер') ||
+                                    currentUserRole.includes('Старший Диспетчер') ||
+                                    currentUserRole.includes('Адміністратор')
+                                ) ||
+                                // Only allow if previous is 'Усунутий'
+                                conditionPriority[fetched?.condition] !== conditionPriority['Усунутий']
+                            }
+                        >
+                            Прийнятий в експлуатацію
+                        </option>
+                        <option
+                            value="Розглянутий технічним керівником"
+                            disabled={
+                                !(
+                                    currentUserRole.includes('Диспетчер') ||
+                                    currentUserRole.includes('Старший Диспетчер') ||
+                                    currentUserRole.includes('Адміністратор')
+                                ) ||
+                                // Only allow if previous is 'Прийнятий в експлуатацію'
+                                conditionPriority[fetched?.condition] !== conditionPriority['Прийнятий в експлуатацію']
+                            }
+                        >
+                            Розглянутий технічним керівником
+                        </option>
+                        <option
+                            value="Протермінований"
+                            disabled={
+                                !(
+                                    currentUserRole.includes('Диспетчер') ||
+                                    currentUserRole.includes('Старший Диспетчер') ||
+                                    currentUserRole.includes('Адміністратор')
+                                ) ||
+                                // Only allow if previous is 'Внесений' or 'Прийнятий до виконання'
+                                !['Внесений', 'Прийнятий до виконання'].includes(fetched?.condition)
+                            }
+                        >
+                            Протермінований
+                        </option>
                     </select>
                 </div>
                 {/* order: number input */}
