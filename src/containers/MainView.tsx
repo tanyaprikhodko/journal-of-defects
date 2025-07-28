@@ -171,7 +171,6 @@ const MainView: React.FC = () => {
           open={actionToNavigate === 'filter'}
           onClose={() => setActionToNavigate('')}
           onApply={(filters) => {
-            console.log('Applied filters:', filters);
             fetchTableData({page: currentPage, filter: filters });
             setActionToNavigate('');
           }}

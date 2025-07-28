@@ -144,7 +144,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ isAuthenticated: false, currentUser: null });
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        console.log('No refresh token found');
         return false;
       }
       const response = await fetch('http://localhost:5188/api/Authentication/refresh-token', {

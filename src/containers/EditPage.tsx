@@ -34,8 +34,6 @@ const EditPage: React.FC = () => {
     const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
     const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
 
-    console.log('Current user ID:', currentUserId);
-
     const [form, setForm] = React.useState<TableRow>({} as TableRow);
     const [commentsToAdd, setCommentsToAdd] = React.useState<CommentRequest[]>([]);
     const [changedFields, setChangedFields] = React.useState<string[]>([]);
@@ -96,8 +94,6 @@ const EditPage: React.FC = () => {
             ...changedFields.includes('redirectRegionId') && { redirectRegionId: Number(form.redirectRegionId) || null },
             ...isEditMode && changedFields.includes('comments') ? { comments: commentsToAdd || [] } : {},
         };
-        console.log('Form state:', form);
-        console.log('Submitting form with payload:', payload);
         await createJournal(payload, isEditMode, id ? Number(id) : null);
         await toast.success('Збережено успішно!', { autoClose: 100 });
         navigate('/main-view');
@@ -112,7 +108,6 @@ const EditPage: React.FC = () => {
         field: string
     ): void {
         setChangedFields(prev => [...prev, field]);
-        console.log('Changed fields:', e.target.value);
 
        setForm(prev => ({
             ...prev,
@@ -144,7 +139,7 @@ const EditPage: React.FC = () => {
             <form className="edit-form" onSubmit={handleSubmit}> 
                 {/* condition: select */}
                 <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE} condition</label>
+                    <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE}</label>
                     <select name="defectState" onChange={e => handleChange(e, 'condition')} style={{ flex: 1 }}>
                         <option value={form.condition || ''}>{form.condition || 'Оберіть стан'}</option>
                         <option value="Внесений">Внесений</option>
