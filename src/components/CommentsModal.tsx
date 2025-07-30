@@ -1,13 +1,7 @@
 import React from "react";
 import './styles/comments.scss';
 import { useTableStore } from "../store-zustand";
-import { CommentRequest } from "../store-zustand";
-
-interface EditModalProps {
-  journalId: number;
-  onAddComment: (comment: CommentRequest) => void;
-  onClose: () => void;
-}
+import { EditModalProps } from "../types/components";
 
 const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose }) => {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);

@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
+import { ColumnSortProps, SortByOption, SortOrder } from '../types/components';
 import { SORT_OPTIONS } from '../constants/tableColumns'; // Assuming you have a constants file for sort options
-
-type SortByOption = 'date' | 'severity' | 'status';
-type SortOrder = 'asc' | 'desc';
-
-interface ColumnSortProps {
-    onChange?: (sortBy: SortByOption, order: SortOrder) => void;
-}
 
 const ColumnSort: React.FC<ColumnSortProps> = ({
     onChange,

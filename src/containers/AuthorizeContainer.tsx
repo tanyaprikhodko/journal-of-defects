@@ -2,16 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { useAuthStore } from '../store-auth';
+import { Department } from '../types';
 import './styles/authorization.scss';
 import 'react-toastify/dist/ReactToastify.css';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-
-type Department = {
-    id: string;
-    name: string;
-};
-
 
 const AuthorizeContainer: React.FC = () => {
     const [department, setDepartment] = useState<Department | null>(null);

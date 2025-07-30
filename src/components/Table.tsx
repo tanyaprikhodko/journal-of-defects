@@ -6,14 +6,8 @@ import {
   ColumnDef,
 } from '@tanstack/react-table';
 import { TableRow } from '../types/table';
+import { TableProps } from '../types/components';
 import { TABLE_ITEM_CONDITIONS } from '../constants/tableColumns';
-
-interface TableProps {
-  columns: Array<{key: string; label: string}>;
-  data: Array<TableRow>;
-  activeRowId?: number | null;
-  click?: (id: number) => void;
-}
 
 const Table: React.FC<TableProps> = ({ columns, data, click, activeRowId }) => {
   const columnDefs = React.useMemo<ColumnDef<TableRow>[]>(

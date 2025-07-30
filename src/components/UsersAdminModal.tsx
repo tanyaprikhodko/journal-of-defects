@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import { AuthUser, User, useAuthStore } from '../store-auth';
+import { useAuthStore } from '../store-auth';
 import { useTableStore } from '../store-zustand';
+import { User } from '../types';
+import { UsersAdminModalProps } from '../types/components';
 import './styles/UsersAdminModal.css';
-
-type UsersAdminModalProps = {
-  visible: boolean;
-  users: AuthUser[];
-  onClose: () => void;
-  onSave: (user: User) => void;
-  onAdd: (user: User) => void;
-  onRemove: (userId: number) => void;
-};
 
 const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
   visible,

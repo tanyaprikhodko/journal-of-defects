@@ -2,13 +2,8 @@ import React, { useState } from 'react';
 import { useTableStore } from '../store-zustand';
 import { useAuthStore } from '../store-auth';
 import './styles/filtersModal.css';
+import { FiltersModalProps } from '../types/components';
 
-
-type FiltersModalProps = {
-  open: boolean;
-  onClose: () => void;
-  onApply: (filters: { [key: string]: string }) => void;
-};
 
 const initialValues = {};
 

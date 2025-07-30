@@ -1,11 +1,5 @@
 import React from 'react';
-
-interface DeleteConfirmationProps {
-  isOpen: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-  message?: string;
-}
+import { DeleteConfirmationProps } from '../types/components';
 
 const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({ isOpen, onConfirm, onCancel, message }) => {
   if (!isOpen) return null;

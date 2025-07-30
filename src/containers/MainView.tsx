@@ -56,7 +56,7 @@ const MainView: React.FC = () => {
 
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
-  const preparedTableData: Array<TableRow> = React.useMemo(() => {
+  const preparedTableData: TableRow[] = React.useMemo(() => {
     return tableData.map(item => {
       return {
         ...item,
