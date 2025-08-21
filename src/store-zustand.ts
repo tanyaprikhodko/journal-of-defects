@@ -63,6 +63,10 @@ export const useTableStore = create<TableState>((set, get) => ({
     }
   },
 
+  getTableDataById: (id: number) => {
+    return get().tableDataById[id];
+  },
+
   getCommentsById: async (id: number) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -87,7 +91,6 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const token = localStorage.getItem('accessToken');
       const user = parseJwt(token || '');
-      console.log('Parsed user from token:', user);
       if (!user?.nameidentifier) throw new Error('User not found');
       const response = await fetch(`http://localhost:5188/api/Comments`, {
         method: 'POST',

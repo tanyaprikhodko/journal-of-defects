@@ -5,12 +5,12 @@ import {
   flexRender,
   ColumnDef,
 } from '@tanstack/react-table';
-import { TableRow } from '../types/table';
+import { TableRowDisplay } from '../types/table';
 import { TableProps } from '../types/components';
 import { TABLE_ITEM_CONDITIONS } from '../constants/tableColumns';
 
 const Table: React.FC<TableProps> = ({ columns, data, click, activeRowId }) => {
-  const columnDefs = React.useMemo<ColumnDef<TableRow>[]>(
+  const columnDefs = React.useMemo<ColumnDef<TableRowDisplay>[]>(
     () =>
       columns.map((col) => ({
         accessorKey: String(col.key),

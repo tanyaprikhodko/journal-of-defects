@@ -30,11 +30,9 @@ const EditPage: React.FC = () => {
     const createJournal = useTableStore(state => state.createJournal);
     const fetchUsers = useAuthStore(state => state.fetchUsers);
     const fetchSubstations = useTableStore(state => state.fetchSubstations);
-    const tableDataById = useTableStore.getState().tableDataById;
     const jwt = localStorage.getItem('accessToken');
     const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
     const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
-    const fetched = tableDataById[Number(id)];
     const conditionPriority: { [key: string]: number } = {
         'Внесений': 1,
         'Прийнятий до виконання': 2,
@@ -47,13 +45,20 @@ const EditPage: React.FC = () => {
     const [form, setForm] = React.useState<TableRow>({} as TableRow);
     const [commentsToAdd, setCommentsToAdd] = React.useState<CommentRequest[]>([]);
     const [changedFields, setChangedFields] = React.useState<string[]>([]);
+    const [fetched, setFetched] = React.useState<TableRow>(useTableStore.getState().getTableDataById(Number(id)));
 
     React.useEffect(() => {
-        if (id) fetchTableDataById(Number(id));
-        fetchObjectTypes();
-        fetchLookupPlaces();
-        fetchUsers();
-        fetchSubstations();
+        async function fetchData() {
+            if (id) {
+                await fetchTableDataById(Number(id));
+                setFetched(useTableStore.getState().getTableDataById(Number(id)));
+            }
+            fetchObjectTypes();
+            fetchLookupPlaces();
+            fetchUsers();
+            fetchSubstations();
+        }
+        fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
@@ -83,7 +88,7 @@ const EditPage: React.FC = () => {
         const payload: createJournalPayload = {
             ...changedFields.includes('order') && { order: Number(form.order) || null },
             ...changedFields.includes('condition') && { condition: form.condition || null },
-            ...changedFields.includes('substation') && { substationId: Number(form.substationId) || null },
+            ...changedFields.includes('substationId') && { substationId: Number(form.substationId) || null },
             ...changedFields.includes('objectNumber') && { objectNumber: Number(form.objectNumber) || null },
             ...changedFields.includes('placeId') && { placeId: Number(form.placeId) || null },
             ...changedFields.includes('responsibleId') && { responsibleId: Number(form.responsible?.id) || null },
@@ -116,11 +121,9 @@ const EditPage: React.FC = () => {
         field: string
     ): void {
         setChangedFields(prev => [...prev, field]);
-
-       setForm(prev => ({
+        setForm(prev => ({
             ...prev,
             [field]: e.target.value,
-            ...field === 'substationRegion' && { substationRegionId: e.target.value },
             ...field === 'place' && { placeId: Number(e.target.value) },
             ...field === 'objectType' && { objectTypeId: Number(e.target.value) },
             ...field === 'author' && { messageAuthorId: Number(e.target.value) },
@@ -146,6 +149,7 @@ const EditPage: React.FC = () => {
             <div className="edit-form-container">
             <form className="edit-form" onSubmit={handleSubmit}> 
                 {/* condition: select */}
+                        <p>{JSON.stringify(form)}</p>
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE}</label>
                     <select name="defectState" onChange={e => handleChange(e, 'condition')} style={{ flex: 1 }}>
@@ -271,12 +275,12 @@ const EditPage: React.FC = () => {
                 {/* substation: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.SUBSTATION_EDIT}</label>
-                    <select name="substationRegion" value={form.substationRegion || 'Оберіть регіон'} onChange={e => handleChange(e, 'substationRegion')} style={{ flex: 1 }}>
+                    <select name="substationRegionId" value={form.substationRegionId} onChange={e => handleChange(e, 'substationRegionId')} style={{ flex: 1 }}>
                         {substations?.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
                     </select>
-                    <select name="substation" value={form.substation || 'Оберіть підстанцію'} onChange={e => handleChange(e, 'substation')} style={{ flex: 1 }}>
+                    <select name="substationId" value={form.substationId || ''} onChange={e => handleChange(e, 'substationId')} style={{ flex: 1 }}>
                         {(substations
                             ?.find(option => option.id === form.substationRegionId)?.substations || [])
                             .map(opt => (

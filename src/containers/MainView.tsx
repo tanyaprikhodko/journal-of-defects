@@ -5,7 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import { useTableStore } from '../store-zustand';
 import { useAuthStore } from '../store-auth';
 import { TABLE_COLUMNS } from '../constants/tableColumns';
-import { TableRow } from '../types/table';
+import { TableRowDisplay } from '../types/table';
 import DeleteConfirmation from '../components/DeleteConformation';
 import ColumnSort from '../components/ColumnSort';
 import FiltersModal from '../components/FiltersModal';
@@ -56,7 +56,7 @@ const MainView: React.FC = () => {
 
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
-  const preparedTableData: TableRow[] = React.useMemo(() => {
+  const preparedTableData: TableRowDisplay[] = React.useMemo(() => {
     return tableData.map(item => {
       return {
         ...item,

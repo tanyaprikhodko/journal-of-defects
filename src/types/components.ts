@@ -1,10 +1,10 @@
-import { TableRow } from './table';
+import { TableRowDisplay } from './table';
 import { AuthUser, User } from './auth';
 import { CommentRequest } from './store';
 
 export interface TableProps {
   columns: Array<{key: string; label: string}>;
-  data: Array<TableRow>;
+  data: Array<TableRowDisplay>;
   activeRowId?: number | null;
   click?: (id: number) => void;
 }
