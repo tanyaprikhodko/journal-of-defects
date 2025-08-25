@@ -98,7 +98,7 @@ export const useTableStore = create<TableState>((set, get) => ({
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ comment, authorId: user.nameidentifier, journalId: comment.journalId }),
+        body: JSON.stringify({ body: comment.body, authorId: user.nameidentifier, journalId: comment.journalId }),
       });
       if (!response.ok) throw new Error('Failed to post comment');
       const newComment = await response.json();

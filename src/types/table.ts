@@ -28,6 +28,11 @@ export interface TableRow {
   objectTypeId?: number | null;
   placeId?: number | null;
   messageAuthorId?: number | null;
+  technicalManagerId?: number | null;
+  confirmedById?: number | null;
+  completedById?: number | null;
+  acceptedById?: number | null;
+  responsibleId?: number | null;
 }
 
 export interface TableRowDisplay {

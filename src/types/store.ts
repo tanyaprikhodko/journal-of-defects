@@ -76,7 +76,7 @@ export interface TableState {
   fetchObjectTypes: () => Promise<void>;
   fetchLookupPlaces: () => Promise<void>;
   fetchSubstations: () => Promise<void>;
-  fetchUsersByRegionId: (regionId: string) => Promise<void>;
+  fetchUsersByRegionId: (regionId?: string) => Promise<void>;
   deleteJournal: (id: number) => Promise<void>;
   createJournal: (journal: createJournalPayload, isEditMode: boolean, id: number | null) => Promise<void>;
   fetchRoles: () => Promise<void>;

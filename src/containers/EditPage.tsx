@@ -28,7 +28,7 @@ const EditPage: React.FC = () => {
     const fetchObjectTypes = useTableStore(state => state.fetchObjectTypes);
     const fetchLookupPlaces = useTableStore(state => state.fetchLookupPlaces);
     const createJournal = useTableStore(state => state.createJournal);
-    const fetchUsers = useAuthStore(state => state.fetchUsers);
+    const fetchUsers = useTableStore(state => state.fetchUsersByRegionId);
     const fetchSubstations = useTableStore(state => state.fetchSubstations);
     const jwt = localStorage.getItem('accessToken');
     const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
@@ -88,24 +88,24 @@ const EditPage: React.FC = () => {
         const payload: createJournalPayload = {
             ...changedFields.includes('order') && { order: Number(form.order) || null },
             ...changedFields.includes('condition') && { condition: form.condition || null },
-            ...changedFields.includes('substationId') && { substationId: Number(form.substationId) || null },
             ...changedFields.includes('objectNumber') && { objectNumber: Number(form.objectNumber) || null },
-            ...changedFields.includes('placeId') && { placeId: Number(form.placeId) || null },
-            ...changedFields.includes('responsibleId') && { responsibleId: Number(form.responsible?.id) || null },
+            ...changedFields.includes('place') && { placeId: Number(form.placeId) || null },
+            ...changedFields.includes('responsible') && { responsibleId: Number(form.responsibleId) || null },
             ...changedFields.includes('completionTerm') && { completionTerm: form.completionTerm ? new Date(form.completionTerm).toISOString() : null },
-            ...changedFields.includes('technicalManagerId') && { technicalManagerId: Number(form.technicalManager?.id) || null },
+            ...changedFields.includes('technicalManager') && { technicalManagerId: Number(form.technicalManagerId) || null },
             ...changedFields.includes('acceptionDate') && { acceptionDate: form.acceptionDate ? new Date(form.acceptionDate).toISOString() : null },
-            ...changedFields.includes('acceptedBy') && { acceptedById: Number(form.acceptedBy?.id) || null },
+            ...changedFields.includes('acceptedBy') && { acceptedById: Number(form.acceptedById) || null },
             ...changedFields.includes('completionDate') && { completionDate: form.completionDate ? new Date(form.completionDate).toISOString() : null },
-            ...changedFields.includes('completedBy') && { completedById: Number(form.completedBy?.id) || null },
+            ...changedFields.includes('completedBy') && { completedById: Number(form.completedById) || null },
             ...changedFields.includes('confirmationDate') && { confirmationDate: form.confirmationDate ? new Date(form.confirmationDate).toISOString() : null },
-            ...changedFields.includes('confirmedBy') && { confirmedById: Number(form.confirmedBy?.id) || null },
+            ...changedFields.includes('confirmedBy') && { confirmedById: Number(form.confirmedById) || null },
             ...changedFields.includes('registrationDate') && { registrationDate: form.registrationDate ? new Date(form.registrationDate).toISOString() : null },
-            ...changedFields.includes('objectTypeId') && { objectTypeId: Number(form.objectTypeId) || null },
+            ...changedFields.includes('objectType') && { objectTypeId: Number(form.objectTypeId) || null },
             ...changedFields.includes('connection') && { connection: form.connection || null },
             ...changedFields.includes('description') && { description: form.description || null },
             ...changedFields.includes('author') && { messageAuthorId: Number(form.messageAuthorId) || null },
-            ...changedFields.includes('redirectRegionId') && { redirectRegionId: Number(form.redirectRegionId) || null },
+            ...changedFields.includes('redirectRegion') && { redirectRegionId: Number(form.redirectRegionId) || null },
+            ...changedFields.includes('substationId') && { substationId: Number(form.substationId) || null },
             ...isEditMode && changedFields.includes('comments') ? { comments: commentsToAdd || [] } : {},
         };
         await createJournal(payload, isEditMode, id ? Number(id) : null);
@@ -127,6 +127,12 @@ const EditPage: React.FC = () => {
             ...field === 'place' && { placeId: Number(e.target.value) },
             ...field === 'objectType' && { objectTypeId: Number(e.target.value) },
             ...field === 'author' && { messageAuthorId: Number(e.target.value) },
+            ...field === 'technicalManager' && { technicalManagerId: Number(e.target.value) },
+            ...field === 'responsible' && { responsibleId: Number(e.target.value) },
+            ...field === 'confirmedBy' && { confirmedById: Number(e.target.value) },
+            ...field === 'completedBy' && { completedById: Number(e.target.value) },
+            ...field === 'substation' && { substationId: Number(e.target.value) },
+            ...field === 'acceptedBy' && { acceptedById: Number(e.target.value) }
         }));
     }
 
@@ -149,7 +155,6 @@ const EditPage: React.FC = () => {
             <div className="edit-form-container">
             <form className="edit-form" onSubmit={handleSubmit}> 
                 {/* condition: select */}
-                        <p>{JSON.stringify(form)}</p>
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE}</label>
                     <select name="defectState" onChange={e => handleChange(e, 'condition')} style={{ flex: 1 }}>
@@ -293,7 +298,7 @@ const EditPage: React.FC = () => {
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.PLACE_OF_DEFECT}</label>
                     <select name="place" value={form.place} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
-                       <option value={form.place} >{form.place || 'Оберіть місце'}</option>
+                       <option value={form.place} >{lookupPlaces?.find(option => option.id === Number(form.place))?.name || 'Оберіть місце'}</option>
                         {lookupPlaces?.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
