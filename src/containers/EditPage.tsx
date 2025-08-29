@@ -91,15 +91,15 @@ const EditPage: React.FC = () => {
             ...changedFields.includes('objectNumber') && { objectNumber: Number(form.objectNumber) || null },
             ...changedFields.includes('place') && { placeId: Number(form.placeId) || null },
             ...changedFields.includes('responsible') && { responsibleId: Number(form.responsibleId) || null },
-            ...changedFields.includes('completionTerm') && { completionTerm: form.completionTerm ? new Date(form.completionTerm).toISOString() : null },
+            ...changedFields.includes('completionTerm') && { completionTerm: form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10)  : null },
             ...changedFields.includes('technicalManager') && { technicalManagerId: Number(form.technicalManagerId) || null },
-            ...changedFields.includes('acceptionDate') && { acceptionDate: form.acceptionDate ? new Date(form.acceptionDate).toISOString() : null },
+            ...changedFields.includes('acceptionDate') && { acceptionDate: form.acceptionDate ? new Date(form.acceptionDate).toISOString().slice(0, 10)  : null },
             ...changedFields.includes('acceptedBy') && { acceptedById: Number(form.acceptedById) || null },
-            ...changedFields.includes('completionDate') && { completionDate: form.completionDate ? new Date(form.completionDate).toISOString() : null },
+            ...changedFields.includes('completionDate') && { completionDate: form.completionDate ? new Date(form.completionDate).toISOString().slice(0, 10)  : null },
             ...changedFields.includes('completedBy') && { completedById: Number(form.completedById) || null },
-            ...changedFields.includes('confirmationDate') && { confirmationDate: form.confirmationDate ? new Date(form.confirmationDate).toISOString() : null },
+            ...changedFields.includes('confirmationDate') && { confirmationDate: form.confirmationDate ? new Date(form.confirmationDate).toISOString().slice(0, 10)  : null },
             ...changedFields.includes('confirmedBy') && { confirmedById: Number(form.confirmedById) || null },
-            ...changedFields.includes('registrationDate') && { registrationDate: form.registrationDate ? new Date(form.registrationDate).toISOString() : null },
+            ...changedFields.includes('registrationDate') && { registrationDate: form.registrationDate ? new Date(form.registrationDate).toISOString().slice(0, 10)  : null },
             ...changedFields.includes('objectType') && { objectTypeId: Number(form.objectTypeId) || null },
             ...changedFields.includes('connection') && { connection: form.connection || null },
             ...changedFields.includes('description') && { description: form.description || null },
@@ -258,7 +258,7 @@ const EditPage: React.FC = () => {
                                 ...e,
                                 target: {
                                     ...e.target,
-                                    value: new Date(e.target.value).toISOString()
+                                    value: new Date(e.target.value).toISOString().slice(0, 10) 
                                 }
                             },
                             'registrationDate'
@@ -298,7 +298,7 @@ const EditPage: React.FC = () => {
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.PLACE_OF_DEFECT}</label>
                     <select name="place" value={form.place} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
-                       <option value={form.place} >{lookupPlaces?.find(option => option.id === Number(form.place))?.name || 'Оберіть місце'}</option>
+                       <option value={form.place} >{form.place || 'Оберіть місце'}</option>
                         {lookupPlaces?.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
@@ -347,12 +347,12 @@ const EditPage: React.FC = () => {
                 {/* completionTerm: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.TIME_OF_ELIMINATION}</label>
-                    <input type="date" name="completionTerm" value={form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
+                    <input type="date" name="completionTerm" value={form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10) .slice(0, 10) : ''} onChange={e => handleChange(
                           {
                                 ...e,
                                 target: {
                                     ...e.target,
-                                    value: new Date(e.target.value).toISOString()
+                                    value: new Date(e.target.value).toISOString().slice(0, 10) 
                                 }
                             }, 'completionTerm')} style={{ flex: 1 }} />
                 </div>
@@ -364,7 +364,7 @@ const EditPage: React.FC = () => {
                             ...e,
                             target: {
                                 ...e.target,
-                                value: new Date(e.target.value).toISOString()
+                                value: new Date(e.target.value).toISOString().slice(0, 10) 
                             }
                         }, 'acceptionDate')} style={{ flex: 1 }} />
                 </div>
@@ -392,7 +392,7 @@ const EditPage: React.FC = () => {
                             ...e,
                             target: {
                                 ...e.target,
-                                value: new Date(e.target.value).toISOString()
+                                value: new Date(e.target.value).toISOString().slice(0, 10) .slice(0, 10) 
                             }
                         }, 'completionDate')} style={{ flex: 1 }} />
                 </div>
@@ -420,7 +420,7 @@ const EditPage: React.FC = () => {
                             ...e,
                             target: {
                                 ...e.target,
-                                value: new Date(e.target.value).toISOString()
+                                value: new Date(e.target.value).toISOString().slice(0, 10) 
                             }
                         }, 'confirmationDate')} style={{ flex: 1 }} />
                 </div>

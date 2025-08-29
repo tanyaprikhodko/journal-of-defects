@@ -28,10 +28,10 @@ const MainView: React.FC = () => {
     { key: 'technicalManager', label: TABLE_COLUMNS.TECH_LEAD },
     { key: 'responsible', label: TABLE_COLUMNS.RESPONSIBLE_FOR_ELIMINATION },
     { key: 'completionTerm', label: TABLE_COLUMNS.TIME_OF_ELIMINATION },
-    { key: 'confirmationDate', label: TABLE_COLUMNS.DATE_OF_ACCEPTING },
+    { key: 'acceptionDate', label: TABLE_COLUMNS.DATE_OF_ACCEPTING },
     { key: 'completionDate', label: TABLE_COLUMNS.DATE_OF_ELIMINATION },
     { key: 'completedBy', label: TABLE_COLUMNS.ELIMINATED },
-    { key: 'acceptionDate', label: TABLE_COLUMNS.DATE_OF_START_EXPLOITATION },
+    { key: 'completionDate', label: TABLE_COLUMNS.DATE_OF_START_EXPLOITATION },
     { key: 'acceptedBy', label: TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON },
   ];
 
