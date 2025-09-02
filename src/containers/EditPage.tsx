@@ -2,8 +2,8 @@ import React from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import './styles/edit.scss';
 import { ToastContainer } from 'react-toastify';
-import { useAuthStore } from '../store-auth';
 import { useTableStore } from '../store-zustand';
+import { useAuthStore } from "../store-auth";
 import { TableRow, CommentRequest, createJournalPayload } from '../types';
 import 'react-toastify/dist/ReactToastify.css';
 import CommentsModal from '../components/CommentsModal';
@@ -14,10 +14,12 @@ import { parseJwt } from '../utils';
 const EditPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const isEditMode = window.location.pathname.includes('edit');
-    // const isCreateMode = window.location.pathname.includes('create');
-    // const isCopyMode = window.location.pathname.includes('create-copy');
+    const isCopyMode = window.location.pathname.includes('create-copy');
+    const isCreateMode = window.location.pathname === '/create';
     const fetchTableDataById = useTableStore(state => state.fetchTableDataById);
-    const userOptions = useAuthStore(state => state.users);
+    const fetchDepartments = useAuthStore(state => state.fetchDepartments);
+    const departmentId = localStorage.getItem('departmentId');
+    const userOptions = useTableStore(state => state.usersByRegionId);
     const objectTypes = useTableStore(state => state.objectTypes);
     const lookupPlaces = useTableStore(state => state.lookupPlaces);
     const substations = useTableStore(state => state.substations);
@@ -33,20 +35,14 @@ const EditPage: React.FC = () => {
     const jwt = localStorage.getItem('accessToken');
     const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
     const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
-    const conditionPriority: { [key: string]: number } = {
-        'Внесений': 1,
-        'Прийнятий до виконання': 2,
-        'Усунутий': 3,
-        'Прийнятий в експлуатацію': 4,
-        'Розглянутий технічним керівником': 5,
-        'Протермінований': 6
-    };
+    const departments = useAuthStore(state => state.departments).filter(dept => dept.id !== departmentId);
 
     const [form, setForm] = React.useState<TableRow>({} as TableRow);
     const [commentsToAdd, setCommentsToAdd] = React.useState<CommentRequest[]>([]);
     const [changedFields, setChangedFields] = React.useState<string[]>([]);
     const [fetched, setFetched] = React.useState<TableRow>(useTableStore.getState().getTableDataById(Number(id)));
-
+    const [redirectRegionId, setRedirectRegionId] = React.useState<string>('');
+   
     React.useEffect(() => {
         async function fetchData() {
             if (id) {
@@ -57,6 +53,7 @@ const EditPage: React.FC = () => {
             fetchLookupPlaces();
             fetchUsers();
             fetchSubstations();
+            fetchDepartments();
         }
         fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,7 +84,6 @@ const EditPage: React.FC = () => {
         e.preventDefault();
         const payload: createJournalPayload = {
             ...changedFields.includes('order') && { order: Number(form.order) || null },
-            ...changedFields.includes('condition') && { condition: form.condition || null },
             ...changedFields.includes('objectNumber') && { objectNumber: Number(form.objectNumber) || null },
             ...changedFields.includes('place') && { placeId: Number(form.placeId) || null },
             ...changedFields.includes('responsible') && { responsibleId: Number(form.responsibleId) || null },
@@ -100,12 +96,13 @@ const EditPage: React.FC = () => {
             ...changedFields.includes('confirmationDate') && { confirmationDate: form.confirmationDate ? new Date(form.confirmationDate).toISOString().slice(0, 10)  : null },
             ...changedFields.includes('confirmedBy') && { confirmedById: Number(form.confirmedById) || null },
             ...changedFields.includes('registrationDate') && { registrationDate: form.registrationDate ? new Date(form.registrationDate).toISOString().slice(0, 10)  : null },
-            ...changedFields.includes('objectType') && { objectTypeId: Number(form.objectTypeId) || null },
+            ...changedFields.includes('object') && { objectTypeId: Number(form.objectTypeId) || null },
             ...changedFields.includes('connection') && { connection: form.connection || null },
             ...changedFields.includes('description') && { description: form.description || null },
             ...changedFields.includes('author') && { messageAuthorId: Number(form.messageAuthorId) || null },
             ...changedFields.includes('redirectRegion') && { redirectRegionId: Number(form.redirectRegionId) || null },
             ...changedFields.includes('substationId') && { substationId: Number(form.substationId) || null },
+            redirectRegionId,
             ...isEditMode && changedFields.includes('comments') ? { comments: commentsToAdd || [] } : {},
         };
         await createJournal(payload, isEditMode, id ? Number(id) : null);
@@ -116,6 +113,12 @@ const EditPage: React.FC = () => {
         navigate('/main-view');
     };
 
+    const preparedTitle = () => {
+        if (isCreateMode) return 'Створення нового запису';
+        if (isCopyMode) return 'Копіювання запису';
+        return 'Редагування запису';
+    };
+
      function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
         field: string
@@ -124,8 +127,8 @@ const EditPage: React.FC = () => {
         setForm(prev => ({
             ...prev,
             [field]: e.target.value,
-            ...field === 'place' && { placeId: Number(e.target.value) },
-            ...field === 'objectType' && { objectTypeId: Number(e.target.value) },
+            ...field === 'place' && { placeId: lookupPlaces?.find(option => option.name === e.target.value)?.id || null },
+            ...field === 'object' && { objectTypeId: Number(e.target.value) },
             ...field === 'author' && { messageAuthorId: Number(e.target.value) },
             ...field === 'technicalManager' && { technicalManagerId: Number(e.target.value) },
             ...field === 'responsible' && { responsibleId: Number(e.target.value) },
@@ -141,7 +144,7 @@ const EditPage: React.FC = () => {
             <div className="edit-header">
                 <div className="edit-header__left">
                     <span className="edit-header__icon" role="img" aria-label="edit">✏️</span>
-                    <span className="edit-header__title">Редагування запису</span>
+                    <span className="edit-header__title">{preparedTitle()}</span>
                 </div>
                 <button
                     type="button"
@@ -157,89 +160,7 @@ const EditPage: React.FC = () => {
                 {/* condition: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE}</label>
-                    <select name="defectState" onChange={e => handleChange(e, 'condition')} style={{ flex: 1 }}>
-                        {/* Validation by user roles and priorities */}
-                        <option value={form.condition || ''}>{form.condition || 'Оберіть стан'}</option>
-                        <option
-                            value="Внесений"
-                            disabled={Boolean(
-                                // Only allow if current is null or already 'Внесений'
-                                fetched?.condition && fetched.condition !== 'Внесений'
-                            )}
-                        >
-                            Внесений
-                        </option>
-                        <option
-                            value="Прийнятий до виконання"
-                            disabled={
-                                !(
-                                    currentUserRole.includes('Виконавець') ||
-                                    currentUserRole.includes('Адміністратор')
-                                ) ||
-                                // Only allow if previous is 'Внесений'
-                                conditionPriority[fetched?.condition] !== conditionPriority['Внесений']
-                            }
-                        >
-                            Прийнятий до виконання
-                        </option>
-                        <option
-                            value="Усунутий"
-                            disabled={
-                                !(
-                                    currentUserRole.includes('Виконавець') ||
-                                    currentUserRole.includes('Адміністратор') ||
-                                    currentUserRole.includes('Диспетчер') ||
-                                    currentUserRole.includes('Старший Диспетчер')
-                                ) ||
-                                // Only allow if previous is 'Прийнятий до виконання'
-                                conditionPriority[fetched?.condition] !== conditionPriority['Прийнятий до виконання']
-                            }
-                        >
-                            Усунутий
-                        </option>
-                        <option
-                            value="Прийнятий в експлуатацію"
-                            disabled={
-                                !(
-                                    currentUserRole.includes('Диспетчер') ||
-                                    currentUserRole.includes('Старший Диспетчер') ||
-                                    currentUserRole.includes('Адміністратор')
-                                ) ||
-                                // Only allow if previous is 'Усунутий'
-                                conditionPriority[fetched?.condition] !== conditionPriority['Усунутий']
-                            }
-                        >
-                            Прийнятий в експлуатацію
-                        </option>
-                        <option
-                            value="Розглянутий технічним керівником"
-                            disabled={
-                                !(
-                                    currentUserRole.includes('Диспетчер') ||
-                                    currentUserRole.includes('Старший Диспетчер') ||
-                                    currentUserRole.includes('Адміністратор')
-                                ) ||
-                                // Only allow if previous is 'Прийнятий в експлуатацію'
-                                conditionPriority[fetched?.condition] !== conditionPriority['Прийнятий в експлуатацію']
-                            }
-                        >
-                            Розглянутий технічним керівником
-                        </option>
-                        <option
-                            value="Протермінований"
-                            disabled={
-                                !(
-                                    currentUserRole.includes('Диспетчер') ||
-                                    currentUserRole.includes('Старший Диспетчер') ||
-                                    currentUserRole.includes('Адміністратор')
-                                ) ||
-                                // Only allow if previous is 'Внесений' or 'Прийнятий до виконання'
-                                !['Внесений', 'Прийнятий до виконання'].includes(fetched?.condition)
-                            }
-                        >
-                            Протермінований
-                        </option>
-                    </select>
+                    <input type="text" name="condition" value={form.condition || ''} style={{ flex: 1 }} disabled />
                 </div>
                 {/* order: number input */}
                 <div className="edit-row">
@@ -275,7 +196,7 @@ const EditPage: React.FC = () => {
                             <option key={option.id} value={option.id}>{option.type}</option>
                         ))}
                     </select>
-                    <input type="number" name="objectTypeId" value={form.objectTypeId || ''} onChange={e => handleChange(e, 'objectTypeId')} />
+                    <input type="number" name="objectNumber" value={form.objectNumber || ''} onChange={e => handleChange(e, 'objectNumber')} />
                 </div>
                 {/* substation: select */}
                 <div className="edit-row">
@@ -300,7 +221,7 @@ const EditPage: React.FC = () => {
                     <select name="place" value={form.place} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
                        <option value={form.place} >{form.place || 'Оберіть місце'}</option>
                         {lookupPlaces?.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
+                            <option key={option.id} value={option.name}>{option.name}</option>
                         ))}
                     </select>
                 </div>
@@ -319,9 +240,12 @@ const EditPage: React.FC = () => {
                     <label className="edit-label">{TABLE_COLUMNS.AUTHOR}</label>
                     <select name="author" onChange={e => handleChange(e, 'author')} style={{ flex: 1 }}>
                         <option value={form.messageAuthor?.id} >{form.messageAuthor?.name || 'Оберіть автора'}</option>
-                        {userOptions.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
-                        ))}
+                        {(departmentId && userOptions?.[departmentId])
+                            ? userOptions[departmentId].map(option => (
+                                <option key={option.id} value={option.id}>{option.name}</option>
+                            ))
+                            : null
+                        }
                     </select>
                 </div>
                 {/* technicalManager: select */}
@@ -329,9 +253,12 @@ const EditPage: React.FC = () => {
                     <label className="edit-label">{TABLE_COLUMNS.TECH_LEAD}</label>
                     <select name="technicalManager" onChange={e => handleChange(e, 'technicalManager')} style={{ flex: 1 }}>
                         <option value={form.technicalManager?.id || ''}>{form.technicalManager?.name || 'Оберіть керівника'}</option>
-                        {userOptions.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
-                        ))}
+                        {(departmentId && userOptions?.[departmentId])
+                            ? userOptions[departmentId].map(option => (
+                                <option key={option.id} value={option.id}>{option.name}</option>
+                            ))
+                            : null
+                        }
                     </select>
                 </div>
                 {/* responsible: select */}
@@ -339,9 +266,12 @@ const EditPage: React.FC = () => {
                     <label className="edit-label">{TABLE_COLUMNS.RESPONSIBLE_FOR_ELIMINATION}</label>
                     <select name="responsible" value={form.responsible?.id || ''} onChange={e => handleChange(e, 'responsible')} style={{ flex: 1 }}>
                         <option value={form.responsible?.id || ''}>{form.responsible?.name || 'Оберіть відповідального'}</option>
-                        {userOptions.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
-                        ))}
+                         {(departmentId && userOptions?.[departmentId])
+                            ? userOptions[departmentId].map(option => (
+                                <option key={option.id} value={option.id}>{option.name}</option>
+                            ))
+                            : null
+                        }
                     </select>
                 </div>
                 {/* completionTerm: date picker */}
@@ -374,13 +304,17 @@ const EditPage: React.FC = () => {
                     <select name="confirmedBy" onChange={e => handleChange(e, 'confirmedBy')} style={{ flex: 1 }}>
                         {!currentUserRole.includes('Адміністратор') && (
                             <option value={form.confirmedBy?.id || currentUserId || ''}>
-                                {form.confirmedBy?.name || userOptions.filter(user=> user.id == currentUserId).map(user => user.name) || 'Оберіть особу'}
+                                {form.confirmedBy?.name ||
+                                    (departmentId && userOptions?.[departmentId]
+                                        ? userOptions[departmentId].filter(user => user.id == currentUserId).map(user => user.name)
+                                        : 'Оберіть особу')}
                             </option>
                         )}
-                        {currentUserRole.includes('Адміністратор') && userOptions
-                            .map(option => (
+                        {currentUserRole.includes('Адміністратор') && departmentId && userOptions?.[departmentId]
+                            ? userOptions[departmentId].map(option => (
                                 <option key={option.id} value={option.id}>{option.name}</option>
                             ))
+                            : null
                         }
                     </select>
                 </div>
@@ -402,11 +336,17 @@ const EditPage: React.FC = () => {
                     <select name="completedBy"  onChange={e => handleChange(e, 'completedBy')} style={{ flex: 1 }}>
                         {!currentUserRole.includes('Адміністратор') && (
                             <option value={form.completedBy?.id || currentUserId || ''}>
-                                {form.completedBy?.name || userOptions.filter(user=> user.id == currentUserId).map(user => user.name) || 'Оберіть особу'}
+                                {form.completedBy?.name ||
+                                    (departmentId && userOptions && userOptions[departmentId]
+                                        ? userOptions[departmentId].filter(user => user.id == currentUserId).map(user => user.name)
+                                        : 'Оберіть особу'
+                                    ) ||
+                                    'Оберіть особу'
+                                }
                             </option>
                         )}
-                        {currentUserRole.includes('Адміністратор') && userOptions
-                            .map(option => (
+                        {currentUserRole.includes('Адміністратор') && departmentId && userOptions &&
+                            userOptions[departmentId]?.map(option => (
                                 <option key={option.id} value={option.id}>{option.name}</option>
                             ))
                         }
@@ -429,20 +369,23 @@ const EditPage: React.FC = () => {
                     <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON}</label>
                     <select name="acceptedBy" onChange={e => handleChange(e, 'acceptedBy')} style={{ flex: 1 }}>
                         <option value={form.acceptedBy?.name || ''}>{form.acceptedBy?.name || 'Оберіть особу'}</option>
-                        {userOptions.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
+                        {(departmentId && userOptions?.[departmentId])
+                            ? userOptions[departmentId].map(option => (
+                                <option key={option.id} value={option.id}>{option.name}</option>
+                            ))
+                            : null
+                        }
+                    </select>
+                </div>
+                <div className="edit-row">
+                    <label className="edit-label">{TABLE_COLUMNS.MOVE_TO}</label>
+                    <select name="moveTo" value={redirectRegionId} onChange={e => setRedirectRegionId(e.target.value)} style={{ flex: 1 }}>
+                        <option value="">Оберіть</option>
+                        {departments.map(department => (
+                            <option key={department.id} value={department.id}>{department.name}</option>
                         ))}
                     </select>
                 </div>
-                {/* moveTo: select
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.MOVE_TO}</label>
-                    <select name="moveTo" value={form. || ''} onChange={e => handleChange(e, 'moveTo')} style={{ flex: 1 }}>
-                        <option value="">Оберіть</option>
-                        <option value="move1">Варіант 1</option>
-                        <option value="move2">Варіант 2</option>
-                    </select>
-                </div> */}
                 {/* comments: button with icon, opens modal */}
                 <div className="edit-row">
                      <label className="edit-label">{TABLE_COLUMNS.COMMENTS}</label>

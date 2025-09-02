@@ -149,7 +149,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const token = localStorage.getItem('accessToken');
       const regionId = localStorage.getItem('departmentId');
-      const response = await fetch(`http://localhost:5188/api/Users?regionId=${regionId}`, {
+      const response = await fetch(`http://localhost:5188/api/Users/by-region/${regionId}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to fetch users by region ID');
@@ -298,5 +298,5 @@ export const useTableStore = create<TableState>((set, get) => ({
       toast.error('Помилка редагування користувача');
       throw error;
     }
-  }
+  },
 }));

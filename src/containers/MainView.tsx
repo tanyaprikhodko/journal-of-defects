@@ -31,7 +31,7 @@ const MainView: React.FC = () => {
     { key: 'acceptionDate', label: TABLE_COLUMNS.DATE_OF_ACCEPTING },
     { key: 'completionDate', label: TABLE_COLUMNS.DATE_OF_ELIMINATION },
     { key: 'completedBy', label: TABLE_COLUMNS.ELIMINATED },
-    { key: 'completionDate', label: TABLE_COLUMNS.DATE_OF_START_EXPLOITATION },
+    { key: 'confirmationDate', label: TABLE_COLUMNS.DATE_OF_START_EXPLOITATION },
     { key: 'acceptedBy', label: TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON },
   ];
 

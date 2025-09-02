@@ -26,7 +26,7 @@ export interface createJournalPayload {
   connection?: string | null;
   description?: string | null;
   messageAuthorId?: number | null;
-  redirectRegionId?: number | null;
+  redirectRegionId?: string | null;
   condition?: string | null;
   comments?: CommentRequest[];
   substationRegionId?: number | null;
