@@ -10,7 +10,6 @@ import CommentsModal from '../components/CommentsModal';
 import { TABLE_COLUMNS, INITIAL_ROW_DATA } from '../constants/tableColumns';
 import { parseJwt } from '../utils';
 
-
 const EditPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const isEditMode = window.location.pathname.includes('edit');
@@ -36,6 +35,22 @@ const EditPage: React.FC = () => {
     const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
     const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
     const departments = useAuthStore(state => state.departments).filter(dept => dept.id !== departmentId);
+
+    const canFillAccepted = ()=>{
+       return fetched?.condition === "Розглянутий технічним керівником" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець'));
+    }
+
+    const canFillTechnicalLead = ()=>{
+        return (fetched?.condition === "Внесений") && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Старший диспетчер') || currentUserRole.includes('Диспетчер'));
+    }
+
+    const canFillEliminated = ()=>{
+        return (fetched?.condition === "Прийнятий до виконання") && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець') || currentUserRole.includes('Старший диспетчер') || currentUserRole.includes('Диспетчер'));
+    }
+
+    const canFillDone = ()=>{
+        return fetched?.condition === "Усунутий" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Старший диспетчер') || currentUserRole.includes('Диспетчер'));
+    }
 
     const [form, setForm] = React.useState<TableRow>({} as TableRow);
     const [commentsToAdd, setCommentsToAdd] = React.useState<CommentRequest[]>([]);
@@ -134,8 +149,8 @@ const EditPage: React.FC = () => {
             ...field === 'responsible' && { responsibleId: Number(e.target.value) },
             ...field === 'confirmedBy' && { confirmedById: Number(e.target.value) },
             ...field === 'completedBy' && { completedById: Number(e.target.value) },
-            ...field === 'substation' && { substationId: Number(e.target.value) },
-            ...field === 'acceptedBy' && { acceptedById: Number(e.target.value) }
+            ...field === 'acceptedBy' && { acceptedById: Number(e.target.value) },
+            ...field === 'substationId' && { substation: substations?.find(reg => reg.id === form?.substationRegionId)?.substations.find(sub => String(sub.id) === String(e.target.value))?.name || '' },
         }));
     }
 
@@ -201,13 +216,15 @@ const EditPage: React.FC = () => {
                 {/* substation: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.SUBSTATION_EDIT}</label>
-                    <select name="substationRegionId" value={form.substationRegionId} onChange={e => handleChange(e, 'substationRegionId')} style={{ flex: 1 }}>
+                    <select name="substationRegionId" value={form.substationRegionId || ''} onChange={e => handleChange(e, 'substationRegionId')} style={{ flex: 1 }}>
+                        <option value={form.substationRegionId || ''}>{substations?.find(option => option.id === form.substationRegionId)?.name || 'Оберіть Регіон'}</option>
                         {substations?.map(option => (
                             <option key={option.id} value={option.id}>{option.name}</option>
                         ))}
                     </select>
                     <select name="substationId" value={form.substationId || ''} onChange={e => handleChange(e, 'substationId')} style={{ flex: 1 }}>
-                        {(substations
+                        <option value={form.substationId || ''}>{form.substation || 'Оберіть Підстанцію'}</option>
+                       {(substations
                             ?.find(option => option.id === form.substationRegionId)?.substations || [])
                             .map(opt => (
                                 <option key={opt.id} value={opt.id}>{opt.name}</option>
@@ -239,23 +256,24 @@ const EditPage: React.FC = () => {
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.AUTHOR}</label>
                     <select name="author" onChange={e => handleChange(e, 'author')} style={{ flex: 1 }}>
-                        <option value={form.messageAuthor?.id} >{form.messageAuthor?.name || 'Оберіть автора'}</option>
+                        <option value={form.messageAuthor?.id || ''}>{form.messageAuthor?.name || 'Оберіть автора'}</option>
                         {(departmentId && userOptions?.[departmentId])
-                            ? userOptions[departmentId].map(option => (
-                                <option key={option.id} value={option.id}>{option.name}</option>
+                            ? userOptions[departmentId].filter(user => user.id == currentUserId).map(option => (
+                                <option key={option.id} value={option.id || ''}>{option.name}</option>
                             ))
                             : null
                         }
                     </select>
                 </div>
+                <div className="edit-divider" />
                 {/* technicalManager: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.TECH_LEAD}</label>
-                    <select name="technicalManager" onChange={e => handleChange(e, 'technicalManager')} style={{ flex: 1 }}>
+                    <select name="technicalManager" disabled={!canFillTechnicalLead()} onChange={e => handleChange(e, 'technicalManager')} style={{ flex: 1 }}>
                         <option value={form.technicalManager?.id || ''}>{form.technicalManager?.name || 'Оберіть керівника'}</option>
                         {(departmentId && userOptions?.[departmentId])
                             ? userOptions[departmentId].map(option => (
-                                <option key={option.id} value={option.id}>{option.name}</option>
+                                <option key={option.id} value={option.id || ''}>{option.name}</option>
                             ))
                             : null
                         }
@@ -264,11 +282,11 @@ const EditPage: React.FC = () => {
                 {/* responsible: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.RESPONSIBLE_FOR_ELIMINATION}</label>
-                    <select name="responsible" value={form.responsible?.id || ''} onChange={e => handleChange(e, 'responsible')} style={{ flex: 1 }}>
+                    <select name="responsible" disabled={!canFillTechnicalLead()} onChange={e => handleChange(e, 'responsible')} style={{ flex: 1 }}>
                         <option value={form.responsible?.id || ''}>{form.responsible?.name || 'Оберіть відповідального'}</option>
                          {(departmentId && userOptions?.[departmentId])
                             ? userOptions[departmentId].map(option => (
-                                <option key={option.id} value={option.id}>{option.name}</option>
+                                <option key={option.id} value={option.id || ''}>{option.name}</option>
                             ))
                             : null
                         }
@@ -277,7 +295,7 @@ const EditPage: React.FC = () => {
                 {/* completionTerm: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.TIME_OF_ELIMINATION}</label>
-                    <input type="date" name="completionTerm" value={form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10) .slice(0, 10) : ''} onChange={e => handleChange(
+                    <input type="date" disabled={!canFillTechnicalLead()} name="completionTerm" value={form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10) .slice(0, 10) : ''} onChange={e => handleChange(
                           {
                                 ...e,
                                 target: {
@@ -286,10 +304,11 @@ const EditPage: React.FC = () => {
                                 }
                             }, 'completionTerm')} style={{ flex: 1 }} />
                 </div>
+                <div className="edit-divider" />
                 {/* acceptionDate: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DATE_OF_ACCEPTING}</label>
-                    <input type="date" name="acceptionDate" value={form.acceptionDate ? new Date(form.acceptionDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
+                    <input type="date" disabled={!canFillAccepted()} name="acceptionDate" value={form.acceptionDate ? new Date(form.acceptionDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
                         {
                             ...e,
                             target: {
@@ -301,61 +320,47 @@ const EditPage: React.FC = () => {
                 {/* confirmedBy: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_PERSON}</label>
-                    <select name="confirmedBy" onChange={e => handleChange(e, 'confirmedBy')} style={{ flex: 1 }}>
-                        {!currentUserRole.includes('Адміністратор') && (
-                            <option value={form.confirmedBy?.id || currentUserId || ''}>
-                                {form.confirmedBy?.name ||
-                                    (departmentId && userOptions?.[departmentId]
-                                        ? userOptions[departmentId].filter(user => user.id == currentUserId).map(user => user.name)
-                                        : 'Оберіть особу')}
-                            </option>
-                        )}
-                        {currentUserRole.includes('Адміністратор') && departmentId && userOptions?.[departmentId]
+                    <select name="acceptedBy" disabled={!canFillAccepted()}  onChange={e => handleChange(e, 'acceptedBy')} style={{ flex: 1 }}>
+                        <option value={form.acceptedBy?.name || ''}>{form.acceptedBy?.name || 'Оберіть особу'}</option>
+                        {(departmentId && userOptions?.[departmentId])
                             ? userOptions[departmentId].map(option => (
-                                <option key={option.id} value={option.id}>{option.name}</option>
+                                <option key={option.id} value={option.id || ''}>{option.name}</option>
                             ))
                             : null
                         }
                     </select>
                 </div>
+                <div className="edit-divider" />
                 {/* completionDate: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DATE_OF_ELIMINATION}</label>
-                    <input type="date" name="completionDate" value={form.completionDate ? new Date(form.completionDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
+                    <input type="date" disabled={!canFillEliminated()} name="completionDate" value={form.completionDate ? new Date(form.completionDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
                         {
                             ...e,
                             target: {
                                 ...e.target,
-                                value: new Date(e.target.value).toISOString().slice(0, 10) .slice(0, 10) 
+                                value: new Date(e.target.value).toISOString().slice(0, 10)
                             }
                         }, 'completionDate')} style={{ flex: 1 }} />
                 </div>
                 {/* completedBy: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ELIMINATED}</label>
-                    <select name="completedBy"  onChange={e => handleChange(e, 'completedBy')} style={{ flex: 1 }}>
-                        {!currentUserRole.includes('Адміністратор') && (
-                            <option value={form.completedBy?.id || currentUserId || ''}>
-                                {form.completedBy?.name ||
-                                    (departmentId && userOptions && userOptions[departmentId]
-                                        ? userOptions[departmentId].filter(user => user.id == currentUserId).map(user => user.name)
-                                        : 'Оберіть особу'
-                                    ) ||
-                                    'Оберіть особу'
-                                }
-                            </option>
-                        )}
-                        {currentUserRole.includes('Адміністратор') && departmentId && userOptions &&
-                            userOptions[departmentId]?.map(option => (
-                                <option key={option.id} value={option.id}>{option.name}</option>
+                    <select name="completedBy" disabled={!canFillEliminated()} onChange={e => handleChange(e, 'completedBy')} style={{ flex: 1 }}>
+                       <option value={form.completedBy?.name || ''}>{form.completedBy?.name || 'Оберіть особу'}</option>
+                        {(departmentId && userOptions?.[departmentId])
+                            ? userOptions[departmentId].map(option => (
+                                <option key={option.id} value={option.id || ''}>{option.name}</option>
                             ))
+                            : null
                         }
                     </select>
                 </div>
+                <div className="edit-divider" />
                 {/* confirmationDate: date picker */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.DATE_OF_START_EXPLOITATION}</label>
-                    <input type="date" name="confirmationDate" value={form.confirmationDate ? new Date(form.confirmationDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
+                    <input type="date" disabled={!canFillDone()} name="confirmationDate" value={form.confirmationDate ? new Date(form.confirmationDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
                         {
                             ...e,
                             target: {
@@ -367,16 +372,17 @@ const EditPage: React.FC = () => {
                 {/* acceptedBy: select */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON}</label>
-                    <select name="acceptedBy" onChange={e => handleChange(e, 'acceptedBy')} style={{ flex: 1 }}>
-                        <option value={form.acceptedBy?.name || ''}>{form.acceptedBy?.name || 'Оберіть особу'}</option>
+                     <select name="confirmedBy" disabled={!canFillDone()} onChange={e => handleChange(e, 'confirmedBy')} style={{ flex: 1 }}>
+                       <option value={form.confirmedBy?.name || ''}>{form.confirmedBy?.name || 'Оберіть особу'}</option>
                         {(departmentId && userOptions?.[departmentId])
                             ? userOptions[departmentId].map(option => (
-                                <option key={option.id} value={option.id}>{option.name}</option>
+                                <option key={option.id} value={option.id || ''}>{option.name}</option>
                             ))
                             : null
                         }
                     </select>
                 </div>
+                <div className="edit-divider" />
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.MOVE_TO}</label>
                     <select name="moveTo" value={redirectRegionId} onChange={e => setRedirectRegionId(e.target.value)} style={{ flex: 1 }}>

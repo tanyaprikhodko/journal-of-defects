@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { toast } from 'react-toastify';
 import { User, AuthState } from './types';
+import { getApiUrl } from './config';
 
 export const useAuthStore = create<AuthState>((set) => ({
   departments: [],
@@ -9,7 +10,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   currentUser: null,
   loginAsync: async (user, password, departmentId) => {
     try {
-      const response = await fetch('http://localhost:5188/api/Authentication/login', {
+      const response = await fetch(`${getApiUrl()}/Authentication/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login: user, password })
@@ -48,8 +49,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchUsers: async (departmentId) => {
     try {
       const url = departmentId
-        ? `http://localhost:5188/api/Users/by-region/${departmentId ??  localStorage.getItem('departmentId')}`
-        : 'http://localhost:5188/api/Users';
+        ? `${getApiUrl()}/Users/by-region/${departmentId ??  localStorage.getItem('departmentId')}`
+        : `${getApiUrl()}/Users`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch users');
       let users = await response.json();
@@ -65,7 +66,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchUserById: async (id: number): Promise<User | null> => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5188/api/Users/${id}`, {
+      const response = await fetch(`${getApiUrl()}/Users/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   fetchDepartments: async () => {
     try {
-      const response = await fetch('http://localhost:5188/api/Lookups/regions');
+      const response = await fetch(`${getApiUrl()}/Lookups/regions`);
       if (!response.ok) throw new Error('Failed to fetch departments');
       let departments = await response.json();
       if (Array.isArray(departments)) {
@@ -109,7 +110,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         localStorage.removeItem('refreshToken');
         return false;
       }
-      const response = await fetch('http://localhost:5188/api/Authentication/refresh-token', {
+      const response = await fetch(`${getApiUrl()}/Authentication/refresh-token`, {
         method: 'POST',
          headers: {
           'Content-Type': 'application/json',

@@ -1,10 +1,10 @@
 import { Person } from './store';
 
 export interface TableRow {
-  id: number;
+  id: number | null;
   condition: string;
   substation: string;
-  order: number | string;
+  order: number | string | null;
   substationRegion: string;
   substationRegionId: string;
   registrationDate: string;

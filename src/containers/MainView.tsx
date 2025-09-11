@@ -67,11 +67,11 @@ const MainView: React.FC = () => {
         completionDate: item.completionDate ? new Date(item.completionDate).toLocaleDateString() : '',
         acceptionDate: item.acceptionDate ? new Date(item.acceptionDate).toLocaleDateString() : '',
         messageAuthor: `${item.messageAuthor?.name} - ${item.messageAuthor?.rank}`,
-        technicalManager: `${item.technicalManager?.name} - ${item.technicalManager?.rank}`,
+        technicalManager: item.technicalManager ? `${item.technicalManager?.name} - ${item.technicalManager?.rank}` : '',
         responsible: item.responsible ? `${item.responsible?.name} - ${item.responsible?.rank}` : '',
         completedBy: item.completedBy ? `${item.completedBy?.name} - ${item.completedBy?.rank}` : '',
-        acceptedBy: item.acceptedBy ? `${item.acceptedBy?.name} - ${item.acceptedBy?.rank}` : '',
-        confirmedBy: item.confirmedBy ? `${item.confirmedBy?.name} - ${item.confirmedBy?.rank}` : '',
+        acceptedBy: item.confirmedBy ? `${item.confirmedBy?.name} - ${item.confirmedBy?.rank}` : '',
+        confirmedBy: item.acceptedBy ? `${item.acceptedBy?.name} - ${item.acceptedBy?.rank}` : '', 
       }
     });
   }, [tableData]);

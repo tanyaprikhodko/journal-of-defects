@@ -5,7 +5,7 @@ import { EditModalProps } from "../types/components";
 
 const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose }) => {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  const comments = useTableStore(state => state?.commentsById?.[journalId] || []);
+  const comments = useTableStore(state => state?.commentsById?.[journalId as number] || []);
   return (
     <div className="edit-modal">
       <div className="edit-modal-content">
@@ -54,7 +54,7 @@ const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose 
               onClick={() => {
                 const value = textareaRef.current?.value.trim();
                 if (value) {
-                  onAddComment({ body: value, authorId: 1, journalId: journalId });
+                  onAddComment({ body: value, authorId: 1, journalId: journalId as number });
                   if (textareaRef.current) textareaRef.current.value = "";
                 }
               }}

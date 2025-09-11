@@ -10,7 +10,7 @@ export interface TableProps {
 }
 
 export interface EditModalProps {
-  journalId: number;
+  journalId: number | null;
   onAddComment: (comment: CommentRequest) => void;
   onClose: () => void;
 }

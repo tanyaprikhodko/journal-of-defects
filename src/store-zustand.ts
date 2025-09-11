@@ -8,6 +8,7 @@ import {
   TableState,
   Person 
 } from './types';
+import { getApiUrl } from './config';
 
 export const useTableStore = create<TableState>((set, get) => ({
   tableData: [],
@@ -24,7 +25,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         IsAscending: params?.order === 'asc' ? 'true' : 'false',
         ...params.filter ? params.filter : '',
       });
-      const response = await fetch(`http://localhost:5188/api/Journals?${searchParams.toString()}`, {
+      const response = await fetch(`${getApiUrl()}/Journals?${searchParams.toString()}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         method: 'GET',
       });
@@ -33,7 +34,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       set({ tableData: data.journals || [] });
       set({
         tableDataById: data.journals.reduce((acc: Record<number, TableRow>, row: TableRow) => {
-          acc[row.id] = row;
+          acc[row.id as number] = row;
           return acc;
         }, {}),
       });
@@ -49,7 +50,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     if (get().tableDataById[id]) return;
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5188/api/Journals/${id}`, {
+      const response = await fetch(`${getApiUrl()}/Journals/${id}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to fetch table data by ID');
@@ -70,7 +71,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   getCommentsById: async (id: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5188/api/Journals/${id}/comments`, {
+      const response = await fetch(`${getApiUrl()}/Journals/${id}/comments`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to fetch comments');
@@ -92,7 +93,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       const token = localStorage.getItem('accessToken');
       const user = parseJwt(token || '');
       if (!user?.nameidentifier) throw new Error('User not found');
-      const response = await fetch(`http://localhost:5188/api/Comments`, {
+      const response = await fetch(`${getApiUrl()}/Comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   fetchObjectTypes: async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:5188/api/Lookups/objectTypes', {
+      const response = await fetch(`${getApiUrl()}/Lookups/objectTypes`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to fetch object types');
@@ -133,7 +134,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   fetchLookupPlaces: async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:5188/api/Lookups/places', {
+      const response = await fetch(`${getApiUrl()}/Lookups/places`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to fetch lookup places');
@@ -149,7 +150,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const token = localStorage.getItem('accessToken');
       const regionId = localStorage.getItem('departmentId');
-      const response = await fetch(`http://localhost:5188/api/Users/by-region/${regionId}`, {
+      const response = await fetch(`${getApiUrl()}/Users/by-region/${regionId}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to fetch users by region ID');
@@ -170,7 +171,7 @@ export const useTableStore = create<TableState>((set, get) => ({
  fetchSubstations: async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:5188/api/Lookups/substationRegions', {
+      const response = await fetch(`${getApiUrl()}/Lookups/substationRegions`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to fetch substations');
@@ -185,7 +186,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   deleteJournal: async (id: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5188/api/Journals/${id}`, {
+      const response = await fetch(`${getApiUrl()}/Journals/${id}`, {
         method: 'DELETE',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
@@ -203,7 +204,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   createJournal: async (journal: createJournalPayload, isEditMode: boolean, id: number | null) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5188/api/Journals/${ isEditMode ? id : ''}`, {
+      const response = await fetch(`${getApiUrl()}/Journals/${ isEditMode ? id : ''}`, {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -228,7 +229,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   fetchRoles: async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:5188/api/Lookups/roles', {
+      const response = await fetch(`${getApiUrl()}/Lookups/roles`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to fetch roles');
@@ -244,7 +245,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   deleteUser: async (userId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5188/api/Users/${userId}`, {
+      const response = await fetch(`${getApiUrl()}/Users/${userId}`, {
         method: 'DELETE',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
@@ -261,7 +262,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   addUser: async (user: Partial<Person>) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:5188/api/Users', {
+      const response = await fetch(`${getApiUrl()}/Users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -282,7 +283,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   editUser: async (userId: number, user: Partial<Person>) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5188/api/Users/${userId}`, {
+      const response = await fetch(`${getApiUrl()}/Users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

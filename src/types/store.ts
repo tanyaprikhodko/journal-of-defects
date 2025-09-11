@@ -1,7 +1,7 @@
 import { TableRow } from './table';
 
 export interface Person {
-  id: number;
+  id: number | null;
   name: string;
   login: string;
   rank: string;
@@ -29,7 +29,7 @@ export interface createJournalPayload {
   redirectRegionId?: string | null;
   condition?: string | null;
   comments?: CommentRequest[];
-  substationRegionId?: number | null;
+  substationRegionId?: number;
   substationRegion?: string | null;
 }
 

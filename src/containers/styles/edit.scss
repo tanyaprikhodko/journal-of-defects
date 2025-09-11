@@ -14,6 +14,12 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.08);
   padding: 0 32px;
 }
+.edit-divider {
+  height: 4px;
+  background: rgb(84, 133, 230);
+  margin: 0;
+  width: 100%;
+}
 .edit-header__left {
   display: flex;
   align-items: center;
