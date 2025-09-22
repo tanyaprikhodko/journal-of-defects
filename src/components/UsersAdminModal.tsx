@@ -4,6 +4,8 @@ import { useTableStore } from '../store-zustand';
 import { User } from '../types';
 import { UsersAdminModalProps } from '../types/components';
 import './styles/UsersAdminModal.css';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
 
 const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
   visible,
@@ -103,8 +105,8 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
     }
   }, []);
 
-  const handleUserSelect = React.useCallback(async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = Number(event.target.value);
+  const handleUserSelect = React.useCallback(async (userId: number) => {
+    const value = userId;
     
     if (value === 0 || !value) {
       if (isMountedRef.current) {
@@ -153,19 +155,28 @@ const UsersAdminModal: React.FC<UsersAdminModalProps> = ({
           <div className="form-section">
             <div className="input-group">
               <label htmlFor="userSelect">Оберіть користувача</label>
-              <select
+              <Autocomplete
                 id="userSelect"
-                value={selectedUserId ?? ''}
-                onChange={handleUserSelect}
-                className="select-input"
-              >
-                <option value="">Оберіть користувача</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
+                options={users}
+                getOptionLabel={(option) => option.name}
+                value={users.find((user) => user.id === selectedUserId) || null}
+                onChange={(_, value) => {
+                  if (value) {
+                    handleUserSelect(value.id);
+                  } else {
+                    handleUserSelect(0);
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Оберіть користувача"
+                    className="select-input"
+                    style={{ width: '100%' }}
+                  />
+                )}
+                disableClearable={false}
+              />
             </div>
           </div>
 
