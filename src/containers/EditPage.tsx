@@ -36,25 +36,31 @@ const EditPage: React.FC = () => {
     const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
     const departments = useAuthStore(state => state.departments).filter(dept => dept.id !== departmentId);
 
-    const canFillAccepted = ()=>{
-       return fetched?.condition === "Розглянутий технічним керівником" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець'));
+    const isObserver = () => { return currentUserRole.includes('Перегляд всіх журналів'); }
+
+    const canFillAccepted = () => {
+        if (isObserver()) return false;
+        return fetched?.condition === "Розглянутий технічним керівником" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець'));
     }
 
-    const canFillTechnicalLead = ()=>{
+    const canFillTechnicalLead = () => {
+        if (isObserver()) return false;
         return (fetched?.condition === "Внесений") && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Технічний керівник'));
     }
 
-    const canFillEliminated = ()=>{
+    const canFillEliminated = () => {
+        if (isObserver()) return false;
         return (fetched?.condition === "Прийнятий до виконання") && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець') || currentUserRole.includes('Старший диспетчер') || currentUserRole.includes('Диспетчер'));
     }
 
-    const canFillDone = ()=>{
+    const canFillDone = () => {
+        if (isObserver()) return false;
         return fetched?.condition === "Усунутий" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Старший диспетчер') || currentUserRole.includes('Диспетчер'));
     }
 
-    const canEdit = ()=>{
-        if(isEditMode){
-            return !currentUserRole.includes('Адміністратор')
+    const canEdit = () => {
+        if (isEditMode) {
+            return !currentUserRole.includes('Адміністратор') && isObserver();
         }
         return false;
     }

@@ -82,6 +82,7 @@ const MainView: React.FC = () => {
   }, [fetchTableData, fetchUsers]);
 
   const clickHandler = (id: number) => {
+    if (isObserver()) return;
     setSelectedJournalId(id);
     if (actionToNavigate === 'delete') {
       setShowDeleteModal(true);
@@ -100,6 +101,8 @@ const MainView: React.FC = () => {
     navigate('/login');
   };
 
+  const isObserver = () => { return currentUserRole.includes('Перегляд всіх журналів'); }
+
   const handleDeleteJournal = () => {
     if (selectedJournalId) {
       deleteJournal(selectedJournalId);
@@ -114,6 +117,7 @@ const MainView: React.FC = () => {
       <button
         className={`main-view-btn${actionToNavigate === 'create' ? ' active' : ''}`}
         onClick={() => navigate('/create')}
+        disabled={isObserver()}
       >
         <span role="img" aria-label="Створити" style={{ marginRight: 8 }}>➕</span>
         Створити
@@ -121,6 +125,7 @@ const MainView: React.FC = () => {
       <button
         className={`main-view-btn${actionToNavigate === 'create-copy' ? ' active' : ''}`}
         onClick={() => actionToNavigate === 'create-copy' ? setActionToNavigate('') : setActionToNavigate('create-copy')}
+        disabled={isObserver()}
       >
         <span role="img" aria-label="Копія" style={{ marginRight: 8 }}>📋</span>
         Створити копію
@@ -128,6 +133,7 @@ const MainView: React.FC = () => {
       <button
         className={`main-view-btn${actionToNavigate === 'edit' ? ' active' : ''}`}
         onClick={() => actionToNavigate === 'edit' ? setActionToNavigate('') : setActionToNavigate('edit')}
+        disabled={isObserver()}
       >
         <span role="img" aria-label="Редагувати" style={{ marginRight: 8 }}>✏️</span>
         Редагувати
@@ -135,6 +141,7 @@ const MainView: React.FC = () => {
       <button
         className={`main-view-btn${actionToNavigate === 'delete' ? ' active' : ''}`}
         onClick={() => actionToNavigate === 'delete' ? setActionToNavigate('') : setActionToNavigate('delete')}
+        disabled={isObserver()}
       >
         <span role="img" aria-label="Видалити" style={{ marginRight: 8 }}>🗑️</span>
         Видалити
