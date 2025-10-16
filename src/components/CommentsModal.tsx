@@ -3,7 +3,7 @@ import './styles/comments.scss';
 import { useTableStore } from "../store-zustand";
 import { EditModalProps } from "../types/components";
 
-const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose }) => {
+const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose, isObserver }) => {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const comments = useTableStore(state => state?.commentsById?.[journalId as number] || []);
   return (
@@ -42,7 +42,7 @@ const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose 
               <div className="edit-no-comments">Коментарів немає</div>
             )}
           </div>
-          <div className="edit-add-comment">
+          {!isObserver && (<div className="edit-add-comment">
             <textarea
               rows={1}
               placeholder="Введіть новий коментар..."
@@ -62,7 +62,7 @@ const EditModal: React.FC<EditModalProps> = ({ journalId, onAddComment, onClose 
             >
               Додати
             </button>
-          </div>
+          </div>)}
         </div>
       </div>
     </div>

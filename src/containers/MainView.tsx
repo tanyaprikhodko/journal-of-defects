@@ -82,15 +82,16 @@ const MainView: React.FC = () => {
   }, [fetchTableData, fetchUsers]);
 
   const clickHandler = (id: number) => {
-    if (isObserver()) return;
     setSelectedJournalId(id);
     if (actionToNavigate === 'delete') {
+      if (isObserver()) return;
       setShowDeleteModal(true);
       return;
     }
     if (!actionToNavigate) {
       navigate(`/edit/${id}`);
     } else {
+      if (isObserver()) return;
       navigate(`/${actionToNavigate}/${id}`);
     }
     setActionToNavigate('');

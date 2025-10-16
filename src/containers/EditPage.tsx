@@ -77,6 +77,7 @@ const EditPage: React.FC = () => {
                 await fetchTableDataById(Number(id));
                 setFetched(useTableStore.getState().getTableDataById(Number(id)));
             }
+            if(isObserver()) return;
             fetchObjectTypes();
             fetchLookupPlaces();
             fetchUsers();
@@ -193,7 +194,7 @@ const EditPage: React.FC = () => {
                 {/* order: number input */}
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.NUMBER}</label>
-                    <input type="number" name="number" disabled={canEdit()} value={form.order ?? ''} onChange={e => handleChange(e, 'order')} style={{ flex: 1 }} />
+                    <input type="number" name="number" disabled={canEdit() || (isCreateMode && !currentUserRole.includes('Адміністратор'))} value={form.order ?? ''} onChange={e => handleChange(e, 'order')} style={{ flex: 1 }} />
                 </div>
                 {/* registrationDate: date picker */}
                 <div className="edit-row">
@@ -399,7 +400,7 @@ const EditPage: React.FC = () => {
                 <div className="edit-divider" />
                 <div className="edit-row">
                     <label className="edit-label">{TABLE_COLUMNS.MOVE_TO}</label>
-                    <select name="moveTo" value={redirectRegionId} onChange={e => setRedirectRegionId(e.target.value)} style={{ flex: 1 }}>
+                    <select name="moveTo" value={redirectRegionId} disabled={isCreateMode || isObserver()} onChange={e => setRedirectRegionId(e.target.value)} style={{ flex: 1 }}>
                         <option value="">Оберіть</option>
                         {departments.map(department => (
                             <option key={department.id} value={department.id}>{department.name}</option>
@@ -419,12 +420,13 @@ const EditPage: React.FC = () => {
                         journalId={form.id}
                         onAddComment={(comment) => handleAddComment(comment)}
                         onClose={() => setShowCommentsModal(false)}
+                        isObserver={isObserver()}
                     />
                 )}
-                <button type="submit" className="edit-save-btn">
+                {!isObserver() && (<button type="submit" className="edit-save-btn">
                     <span role="img" aria-label="save" style={{ marginRight: 6 }}>💾</span>
                     Зберегти
-                </button>
+                </button>)}
             </form>
             </div>
             <ToastContainer position="top-center" />
