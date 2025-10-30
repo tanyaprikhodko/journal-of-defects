@@ -13,6 +13,7 @@ export interface EditModalProps {
   journalId: number | null;
   onAddComment: (comment: CommentRequest) => void;
   onClose: () => void;
+  isObserver: boolean;
 }
 
 export interface DeleteConfirmationProps {

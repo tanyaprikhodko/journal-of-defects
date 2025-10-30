@@ -29,12 +29,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         return true;
       } else {
         set({ isAuthenticated: false, currentUser: null });
-        toast.error('Невірний логін або пароль');
-        return false;
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
       }
-    } catch {
+
+    } catch(error) {
       set({ isAuthenticated: false, currentUser: null });
-      toast.error('Помилка під час входу до системи');
+      console.error(error)
       return false;
     }
   },
@@ -52,15 +55,21 @@ export const useAuthStore = create<AuthState>((set) => ({
         ? `${getApiUrl()}/Users/by-region/${departmentId ??  localStorage.getItem('departmentId')}`
         : `${getApiUrl()}/Users`;
       const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch users');
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       let users = await response.json();
       if (Array.isArray(users)) {
         users = users.sort((a, b) => a.name.localeCompare(b.name));
       }
       set({ users });
-    } catch {
+    } catch(error) {
       set({ users: [] });
-      toast.error('Помилка завантаження користувачів');
+      console.error(error)
+      throw error;
     }
   },
   fetchUserById: async (id: number): Promise<User | null> => {
@@ -73,31 +82,42 @@ export const useAuthStore = create<AuthState>((set) => ({
           ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
         },
       });
-      if (!response.ok) throw new Error('Failed to fetch user');
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const user = await response.json();
       set((state) => ({
         users: state.users.map((u) => (u.id === id ? user : u)),
       }));
 
       return user;
-    } catch {
+    } catch(error) {
       set({ users: [] });
-      toast.error('Помилка завантаження користувача');
+      console.error(error)
       return null;
     }
   },
   fetchDepartments: async () => {
     try {
       const response = await fetch(`${getApiUrl()}/Lookups/regions`);
-      if (!response.ok) throw new Error('Failed to fetch departments');
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       let departments = await response.json();
       if (Array.isArray(departments)) {
         departments = departments.sort((a, b) => a.name.localeCompare(b.name));
       }
       set({ departments });
-    } catch {
+    } catch(error) {
       set({ departments: [] });
-      toast.error('Помилка завантаження відділів');
+      console.error(error);
+      throw error;
     }
   },
   refreshTokenAsync: async () => {

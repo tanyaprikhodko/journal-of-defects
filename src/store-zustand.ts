@@ -29,7 +29,12 @@ export const useTableStore = create<TableState>((set, get) => ({
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         method: 'GET',
       });
-      if (!response.ok) throw new Error('Failed to fetch table data');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
       set({ tableData: data.journals || [] });
       set({
@@ -41,8 +46,8 @@ export const useTableStore = create<TableState>((set, get) => ({
       set({ totalPages: data.totalPages, currentPage: data.currentPage });
     } catch (error) {
       console.error('Error fetching table data:', error);
-      toast.error('Помилка завантаження даних таблиці');
       set({ tableData: [] });
+      throw error;
     }
   },
 
@@ -53,14 +58,19 @@ export const useTableStore = create<TableState>((set, get) => ({
       const response = await fetch(`${getApiUrl()}/Journals/${id}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to fetch table data by ID');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
       set(state => ({
         tableDataById: { ...state.tableDataById, [id]: data },
       }));
     } catch (error) {
       console.error('Error fetching table data by ID:', error);
-      toast.error('Помилка завантаження деталей запису');
+      throw error;
     }
   },
 
@@ -74,17 +84,22 @@ export const useTableStore = create<TableState>((set, get) => ({
       const response = await fetch(`${getApiUrl()}/Journals/${id}/comments`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to fetch comments');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const comments = await response.json();
       set(state => ({
         commentsById: { ...state.commentsById, [id]: comments },
       }));
     } catch (error) {
       console.error('Error fetching comments:', error);
-      toast.error('Помилка завантаження коментарів');
       set(state => ({
         commentsById: { ...state.commentsById, [id]: [] },
       }));
+      throw error;
     }
   },
 
@@ -101,7 +116,12 @@ export const useTableStore = create<TableState>((set, get) => ({
         },
         body: JSON.stringify({ body: comment.body, authorId: user.nameidentifier, journalId: comment.journalId }),
       });
-      if (!response.ok) throw new Error('Failed to post comment');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const newComment = await response.json();
       set(state => ({
         commentsById: {
@@ -112,7 +132,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       toast.success('Коментар успішно додано');
     } catch (error) {
       console.error('Error posting comment:', error);
-      toast.error('Помилка додавання коментаря');
+      throw error;
     }
   },
 
@@ -122,12 +142,17 @@ export const useTableStore = create<TableState>((set, get) => ({
       const response = await fetch(`${getApiUrl()}/Lookups/objectTypes`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to fetch object types');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
       set({ objectTypes: data });
     } catch (error) {
       console.error('Error fetching object types:', error);
-      toast.error('Помилка завантаження типів об\'єктів');
+      throw error;
     }
   },
 
@@ -137,12 +162,17 @@ export const useTableStore = create<TableState>((set, get) => ({
       const response = await fetch(`${getApiUrl()}/Lookups/places`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to fetch lookup places');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage as string);
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
       set({ lookupPlaces: data });
     } catch (error) {
       console.error('Error fetching lookup places:', error);
-      toast.error('Помилка завантаження місць дефектів');
+      throw error;
     }
   },
 
@@ -153,7 +183,12 @@ export const useTableStore = create<TableState>((set, get) => ({
       const response = await fetch(`${getApiUrl()}/Users/by-region/${regionId}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to fetch users by region ID');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
       set({
         usersByRegionId: {
@@ -163,8 +198,8 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
     } catch (error) {
       console.error('Error fetching users by region ID:', error);
-      toast.error('Помилка завантаження користувачів регіону');
       set({ usersByRegionId: {} });
+      throw error;
     }
   },
 
@@ -174,12 +209,17 @@ export const useTableStore = create<TableState>((set, get) => ({
       const response = await fetch(`${getApiUrl()}/Lookups/substationRegions`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to fetch substations');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
       set({ substations: data });
     } catch (error) {
       console.error('Error fetching substations:', error);
-      toast.error('Помилка завантаження підстанцій');
+      throw error;
     }
  },
 
@@ -190,13 +230,17 @@ export const useTableStore = create<TableState>((set, get) => ({
         method: 'DELETE',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to delete journal');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       // Optionally refresh table data after deletion
       await get().fetchTableData({ page: get().currentPage });
       toast.success('Запис успішно видалено');
     } catch (error) {
       console.error('Error deleting journal:', error);
-      toast.error('Помилка видалення запису');
       throw error;
     }
   },
@@ -212,7 +256,14 @@ export const useTableStore = create<TableState>((set, get) => ({
         },
         body: JSON.stringify(journal),
       });
-      if (!response.ok) throw new Error('Failed to create journal');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+
       const newJournal = await response.json();
       set(state => ({
         tableData: [...state.tableData, newJournal],
@@ -221,7 +272,6 @@ export const useTableStore = create<TableState>((set, get) => ({
       toast.success(isEditMode ? 'Запис успішно оновлено' : 'Запис успішно створено');
     } catch (error) {
       console.error('Error creating journal:', error);
-      toast.error(isEditMode ? 'Помилка оновлення запису' : 'Помилка створення запису');
       throw error;
     }
   },
@@ -232,13 +282,18 @@ export const useTableStore = create<TableState>((set, get) => ({
       const response = await fetch(`${getApiUrl()}/Lookups/roles`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to fetch roles');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       const roles = await response.json();
       set({ roles });
     } catch (error) {
       console.error('Error fetching roles:', error);
-      toast.error('Помилка завантаження ролей');
       set({ roles: [] });
+      throw error;
     }
   },
 
@@ -249,12 +304,15 @@ export const useTableStore = create<TableState>((set, get) => ({
         method: 'DELETE',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) throw new Error('Failed to delete user');
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       toast.success('Користувач успішно видалений');
-      // Optionally, refresh users list or update state here
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error('Помилка видалення користувача');
       throw error;
     }
   },
@@ -270,12 +328,15 @@ export const useTableStore = create<TableState>((set, get) => ({
         },
         body: JSON.stringify(user),
       });
-      if (!response.ok) throw new Error('Failed to add user');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       toast.success('Користувач успішно доданий');
-      // Optionally, refresh users list or update state here
     } catch (error) {
       console.error('Error adding user:', error);
-      toast.error('Помилка додавання користувача');
       throw error;
     }
   },
@@ -291,12 +352,15 @@ export const useTableStore = create<TableState>((set, get) => ({
         },
         body: JSON.stringify(user),
       });
-      if (!response.ok) throw new Error('Failed to edit user');
+      if (!response.ok){
+        const errorData = await response.json();
+        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
       toast.success('Користувач успішно оновлений');
-      // Optionally, refresh users list or update state here
     } catch (error) {
       console.error('Error editing user:', error);
-      toast.error('Помилка редагування користувача');
       throw error;
     }
   },

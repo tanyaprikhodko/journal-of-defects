@@ -148,7 +148,7 @@ const EditPage: React.FC = () => {
         return 'Редагування запису';
     };
 
-     function handleChange(
+    function handleChange(
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
         field: string
     ): void {
