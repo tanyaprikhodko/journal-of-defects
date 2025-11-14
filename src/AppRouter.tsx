@@ -4,6 +4,7 @@ import AuthorizeContainer from './containers/AuthorizeContainer';
 import MainView from './containers/MainView';
 import NotFoundPage from './containers/NotFoundPage';
 import EditPage from './containers/EditPage';
+import CreatePage from './containers/CreatePage';
 
 const isAuthenticated = () => {
     return localStorage.getItem('accessToken') !== null;
@@ -46,7 +47,7 @@ const AppRouter: React.FC = () => {
                     path="/create"
                     element={
                         <PrivateRoute>
-                            <EditPage />
+                            <CreatePage />
                         </PrivateRoute>
                     }
                 />

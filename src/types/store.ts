@@ -5,6 +5,7 @@ export interface Person {
   name: string;
   login: string;
   rank: string;
+  roleIds?: number[];
 }
 
 export interface createJournalPayload {

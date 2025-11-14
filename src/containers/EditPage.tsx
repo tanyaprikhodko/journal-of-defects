@@ -300,7 +300,7 @@ const EditPage: React.FC = () => {
                     <select name="responsible" disabled={!canFillTechnicalLead()} onChange={e => handleChange(e, 'responsible')} style={{ flex: 1 }}>
                         <option value={form.responsible?.id || ''}>{form.responsible?.name || 'Оберіть відповідального'}</option>
                          {(departmentId && userOptions?.[departmentId])
-                            ? userOptions[departmentId].map(option => (
+                            ? userOptions[departmentId].filter(user => user.roleIds?.includes(2)).map(option => (
                                 <option key={option.id} value={option.id || ''}>{option.name}</option>
                             ))
                             : null

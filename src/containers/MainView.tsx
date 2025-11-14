@@ -104,6 +104,8 @@ const MainView: React.FC = () => {
 
   const isObserver = () => { return currentUserRole.includes('Перегляд всіх журналів'); }
 
+  const isCreateDisabled = () => { return currentUserRole.includes('Адміністратор') && !isObserver(); }
+
   const handleDeleteJournal = () => {
     if (selectedJournalId) {
       deleteJournal(selectedJournalId);
@@ -118,7 +120,7 @@ const MainView: React.FC = () => {
       <button
         className={`main-view-btn${actionToNavigate === 'create' ? ' active' : ''}`}
         onClick={() => navigate('/create')}
-        disabled={isObserver()}
+        disabled={isCreateDisabled()}
       >
         <span role="img" aria-label="Створити" style={{ marginRight: 8 }}>➕</span>
         Створити
@@ -126,7 +128,7 @@ const MainView: React.FC = () => {
       <button
         className={`main-view-btn${actionToNavigate === 'create-copy' ? ' active' : ''}`}
         onClick={() => actionToNavigate === 'create-copy' ? setActionToNavigate('') : setActionToNavigate('create-copy')}
-        disabled={isObserver()}
+        disabled={isCreateDisabled()}
       >
         <span role="img" aria-label="Копія" style={{ marginRight: 8 }}>📋</span>
         Створити копію
