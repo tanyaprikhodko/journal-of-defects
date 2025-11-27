@@ -70,6 +70,7 @@ export interface TableState {
   usersByRegionId?: Record<string, Person[]>;
   substations?: Substation[];
   roles?: Array<{ id: number; name: string }>;
+  appliedFilters: { [key: string]: string } | null;
   fetchTableData: (params: { page?: number; sortBy?: string; order?: string; filter?: { [key: string]: string } }) => Promise<void>;
   fetchTableDataById: (id: number) => Promise<void>;
   getCommentsById: (id: number) => Promise<void>;
@@ -85,4 +86,6 @@ export interface TableState {
   addUser: (user: Partial<Person>) => Promise<void>;
   editUser: (userId: number, user: Partial<Person>) => Promise<void>;
   getTableDataById: (id: number) => TableRow;
+  setFilters: (filters: { [key: string]: string } | null) => void;
+  resetFilters: () => void;
 }

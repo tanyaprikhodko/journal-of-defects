@@ -26,7 +26,7 @@ export interface DeleteConfirmationProps {
 export type FiltersModalProps = {
   open: boolean;
   onClose: () => void;
-  onApply: (filters: { [key: string]: string }) => void;
+  onApply: () => void;
 };
 
 export type UsersAdminModalProps = {

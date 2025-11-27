@@ -9,7 +9,6 @@ import { TableRowDisplay } from '../types/table';
 import DeleteConfirmation from '../components/DeleteConformation';
 import ColumnSort from '../components/ColumnSort';
 import FiltersModal from '../components/FiltersModal';
-import UsersAdminModal from '../components/UsersAdminModal';
 import '../containers/styles/mainView.scss';
 import 'react-toastify/dist/ReactToastify.css';
 import { parseJwt } from '../utils';
@@ -42,11 +41,7 @@ const MainView: React.FC = () => {
   const fetchTableData = useTableStore(state => state.fetchTableData);
   const deleteJournal = useTableStore(state => state.deleteJournal);
   const logout = useAuthStore(state => state.logout);
-  const users = useAuthStore(state => state.users);
   const fetchUsers = useAuthStore(state => state.fetchUsers);
-  const addUser = useTableStore(state => state.addUser);
-  const editUser = useTableStore(state => state.editUser);
-  const deleteUser = useTableStore(state => state.deleteUser);
   const jwt = localStorage.getItem('accessToken');
   const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
 
@@ -182,22 +177,21 @@ const MainView: React.FC = () => {
         <FiltersModal
           open={actionToNavigate === 'filter'}
           onClose={() => setActionToNavigate('')}
-          onApply={(filters) => {
-            fetchTableData({page: currentPage, filter: filters });
-            setActionToNavigate('');
+          onApply={() => {
+            fetchTableData({page: currentPage });
           }}
         />
       )}
       {currentUserRole.includes('Адміністратор') && (
         <button
           className="main-view-btn"
-          onClick={() => actionToNavigate === 'users-admin' ? setActionToNavigate('') : setActionToNavigate('users-admin')}
+           onClick={() => navigate('/users-admin')}
         >
           <span role="img" aria-label="Користувачі" style={{ marginRight: 8 }}>👥</span>
           Користувачі
         </button>
       )}
-      {actionToNavigate === 'users-admin' && (
+      {/* {actionToNavigate === 'users-admin' && (
         <UsersAdminModal
           visible={actionToNavigate === 'users-admin'}
           onClose={() => setActionToNavigate('')}
@@ -216,7 +210,7 @@ const MainView: React.FC = () => {
           }}
           users={users}
         />
-      )}
+      )} */}
       <button
         className="main-view-btn"
         onClick={handleLogout}

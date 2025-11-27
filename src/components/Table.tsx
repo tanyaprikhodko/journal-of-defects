@@ -10,6 +10,8 @@ import { TableProps } from '../types/components';
 import { TABLE_ITEM_CONDITIONS } from '../constants/tableColumns';
 
 const Table: React.FC<TableProps> = ({ columns, data, click, activeRowId }) => {
+  const [hoveredRowId, setHoveredRowId] = React.useState<number | null>(null);
+
   const columnDefs = React.useMemo<ColumnDef<TableRowDisplay>[]>(
     () =>
       columns.map((col) => ({
@@ -30,8 +32,15 @@ const Table: React.FC<TableProps> = ({ columns, data, click, activeRowId }) => {
   });
 
   return (
-    <div style={{ overflowY: 'auto' }}>
-      <table style={{borderCollapse: 'collapse', width: '100%', height: '100%'}}>
+    <div style={{ 
+      width: '100%', 
+      height: '100%',
+    }}>
+      <table style={{
+        borderCollapse: 'collapse',
+        width: '100%',
+        marginLeft: '32px',
+      }}>
         <thead>
           {table.getHeaderGroups().map(headerGroup => (
           <tr key={headerGroup.id}>
@@ -74,37 +83,46 @@ const Table: React.FC<TableProps> = ({ columns, data, click, activeRowId }) => {
             </td>
           </tr>
         ) : (
-          table.getRowModel().rows.map(row => (
-            <tr
-              key={row.id}
-              style={click ? {
-                 cursor: 'pointer',
-                 backgroundColor: TABLE_ITEM_CONDITIONS[row?.original?.condition as keyof typeof TABLE_ITEM_CONDITIONS],
-              } : {}}
-              onClick={click ? () => click(row.original.id) : undefined}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  style={{
-                  border: '1px solid #000',
-                  padding: '4px 8px',
-                  textAlign: 'left',
-                  textOverflow: 'ellipsis',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  color: activeRowId === row.original.id ? '#888888' : '#000',
-                  }}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))
+          table.getRowModel().rows.map(row => {
+            const isHovered = hoveredRowId === row.original.id;
+            const backgroundColor = TABLE_ITEM_CONDITIONS[row?.original?.condition as keyof typeof TABLE_ITEM_CONDITIONS] || '#d4dde2ff';
+            
+            return (
+              <tr
+                key={row.id}
+                onMouseEnter={() => setHoveredRowId(row.original.id)}
+                onMouseLeave={() => setHoveredRowId(null)}
+                style={{
+                  cursor: click ? 'pointer' : 'default',
+                  backgroundColor: backgroundColor,
+                  filter: isHovered ? 'brightness(1.5)' : 'none',
+                  transition: 'filter 0.15s ease',
+                }}
+                onClick={click ? () => click(row.original.id) : undefined}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    style={{
+                      border: '1px solid #000',
+                      padding: '4px 8px',
+                      textAlign: 'left',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      color: activeRowId === row.original.id ? '#888888' : '#000',
+                    }}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            );
+          })
         )}
       </tbody>
-      </table>
-    </div>
+    </table>
+  </div>
   );
 };
 

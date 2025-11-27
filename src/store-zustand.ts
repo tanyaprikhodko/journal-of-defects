@@ -16,6 +16,16 @@ export const useTableStore = create<TableState>((set, get) => ({
   objectTypes: [],
   lookupPlaces: [],
   usersByRegionId: {},
+  appliedFilters: null,
+
+  setFilters: (filters: {[key: string]: string } | null): void => {
+    set({ appliedFilters: filters });
+  },
+
+  resetFilters: (): void => {
+    set({ appliedFilters: null });
+  },
+
   fetchTableData: async (params) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -23,8 +33,10 @@ export const useTableStore = create<TableState>((set, get) => ({
         page: params?.page ? params.page.toString() : get().currentPage?.toString() || '1',
         ColumnName: params?.sortBy || '',
         IsAscending: params?.order === 'asc' ? 'true' : 'false',
-        ...params.filter ? params.filter : '',
+        ItemsPerPage: '20',
+        ...get().appliedFilters ? get().appliedFilters : '',
       });
+
       const response = await fetch(`${getApiUrl()}/Journals?${searchParams.toString()}`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         method: 'GET',

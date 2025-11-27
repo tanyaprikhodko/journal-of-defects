@@ -5,14 +5,12 @@ import './styles/filtersModal.css';
 import { FiltersModalProps } from '../types/components';
 
 
-const initialValues = {};
-
 const FiltersModal: React.FC<FiltersModalProps> = ({
   open,
   onClose,
   onApply,
 }) => {
-
+  const initialValues = useTableStore.getState().appliedFilters || {};
   const [values, setValues] = useState<{ [key: string]: string }>(initialValues);
   const objectTypes = useTableStore(state => state.objectTypes);
   const lookupPlaces = useTableStore(state => state.lookupPlaces);
@@ -23,6 +21,8 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   const fetchLookupPlaces = useTableStore(state => state.fetchLookupPlaces);
   const fetchUsers = useAuthStore(state => state.fetchUsers);
   const fetchSubstations = useTableStore(state => state.fetchSubstations);
+  const setFilters = useTableStore(state => state.setFilters);
+  const resetFilters = useTableStore(state => state.resetFilters);
 
   React.useEffect(() => {
     fetchObjectTypes();
@@ -44,14 +44,16 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   let isOpen = open;
 
   const handleApply = () => {
-    onApply(values);
+    setFilters(values);
+    onApply();
+    onClose();
     isOpen = false;
   };
 
   const handleReset = () => {
-    setValues(initialValues);
-    onClose();
-    isOpen = false;
+    setValues({});
+    resetFilters();
+    onApply();
   };
 
   return (
@@ -61,7 +63,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <h2>Filter Options</h2>
+          <h2>Фільтри</h2>
           <button
             onClick={() => {isOpen = false; onClose();}}
             className="close-button"
@@ -348,10 +350,11 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
           </div>
         </div>
         <div className="modal-footer">
-          <button onClick={handleReset} className="btn btn-secondary">Reset</button>
+          <button onClick={handleReset} className="btn btn-danger">Скинути</button>
           <button onClick={handleApply} className="btn btn-primary">
-            Apply
+            Застосувати
           </button>
+          <button onClick={onClose} className="btn btn-secondary">Закрити</button>
         </div>
       </div>
     </div>

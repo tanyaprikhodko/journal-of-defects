@@ -5,6 +5,7 @@ import MainView from './containers/MainView';
 import NotFoundPage from './containers/NotFoundPage';
 import EditPage from './containers/EditPage';
 import CreatePage from './containers/CreatePage';
+import UserAdmin from './containers/UserAdmin'
 
 const isAuthenticated = () => {
     return localStorage.getItem('accessToken') !== null;
@@ -48,6 +49,14 @@ const AppRouter: React.FC = () => {
                     element={
                         <PrivateRoute>
                             <CreatePage />
+                        </PrivateRoute>
+                    }
+                />
+                <Route 
+                    path="/users-admin"
+                    element={
+                        <PrivateRoute>
+                            <UserAdmin />
                         </PrivateRoute>
                     }
                 />
