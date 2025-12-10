@@ -26,7 +26,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     set({ appliedFilters: null });
   },
 
-  fetchTableData: async (params) => {
+  fetchTableData: async (params: { page?: number; sortBy?: string; order?: string; filters?: string }) => {
     try {
       const token = localStorage.getItem('accessToken');
       const searchParams = new URLSearchParams({
@@ -43,7 +43,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -72,7 +72,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -98,7 +98,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -130,7 +130,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -156,7 +156,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -176,7 +176,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage as string);
         throw new Error(errorMessage);
       }
@@ -197,7 +197,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -223,7 +223,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -244,7 +244,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -271,7 +271,7 @@ export const useTableStore = create<TableState>((set, get) => ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -296,7 +296,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -318,7 +318,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -342,7 +342,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -366,7 +366,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
       if (!response.ok){
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }

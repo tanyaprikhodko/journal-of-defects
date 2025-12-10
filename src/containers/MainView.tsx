@@ -1,6 +1,6 @@
 import React from 'react';
 import Table from '../components/Table';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { useTableStore } from '../store-zustand';
 import { useAuthStore } from '../store-auth';
@@ -35,21 +35,77 @@ const MainView: React.FC = () => {
   ];
 
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const tableData = useTableStore(state => state.tableData);
   const totalPages = useTableStore(state => state.totalPages);
   const currentPage = useTableStore(state => state.currentPage);
+  const appliedFilters = useTableStore(state => state.appliedFilters);
   const fetchTableData = useTableStore(state => state.fetchTableData);
   const deleteJournal = useTableStore(state => state.deleteJournal);
+  const setAppliedFilters = useTableStore(state => state.setAppliedFilters);
   const logout = useAuthStore(state => state.logout);
   const fetchUsers = useAuthStore(state => state.fetchUsers);
   const jwt = localStorage.getItem('accessToken');
   const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
 
-
   const [actionToNavigate, setActionToNavigate] = React.useState<string>('');
   const [selectedJournalId, setSelectedJournalId] = React.useState<number | null>(null);
-
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+
+  // Watch for search params changes
+  React.useEffect(() => {
+    const data = {
+      ...(searchParams.get('page') ? { page: searchParams.get('page') } : {}),
+      ...(searchParams.get('sortBy') ? { sortBy: searchParams.get('sortBy') } : {}),
+      ...(searchParams.get('order') ? { order: searchParams.get('order') } : {}),
+      ...(searchParams.get('filters') ? { filters: searchParams.get('filters') } : {}),
+    };
+
+    fetchTableData(data);
+  }, [searchParams, fetchTableData]);
+
+  // Parse URL parameters
+  const parseUrlParams = React.useCallback(() => {
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const sortBy = searchParams.get('sortBy') || undefined;
+    const order = searchParams.get('order') || undefined;
+    const filtersJson = searchParams.get('filters');
+    
+    let filters = null;
+    if (filtersJson) {
+      try {
+        filters = JSON.parse(decodeURIComponent(filtersJson));
+      } catch (e) {
+        console.error('Error parsing filters from URL:', e);
+      }
+    }
+
+    return { page, sortBy, order, filters };
+  }, [searchParams]);
+
+  // Update URL with page parameter
+  const updatePageInUrl = React.useCallback((page: number) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('page', page.toString());
+    setSearchParams(newSearchParams);
+  }, [searchParams, setSearchParams]);
+
+  // Load data from URL on mount
+  React.useEffect(() => {
+    if (isInitialLoad) {
+      const { page, sortBy, order, filters } = parseUrlParams();
+      
+      if (filters) {
+        setAppliedFilters(filters);
+      }
+      
+      fetchTableData({ page, sortBy, order, filter: filters || undefined });
+      fetchUsers();
+      setIsInitialLoad(false);
+    }
+  }, [isInitialLoad, parseUrlParams, setAppliedFilters, fetchTableData, fetchUsers]);
 
   const preparedTableData: TableRowDisplay[] = React.useMemo(() => {
     return tableData.map(item => {
@@ -71,10 +127,10 @@ const MainView: React.FC = () => {
     });
   }, [tableData]);
 
-  React.useEffect(() => {
-    fetchTableData({ page: 1 });
-    fetchUsers();
-  }, [fetchTableData, fetchUsers]);
+  const handleFetchData = () => {
+    const data = parseUrlParams();
+    fetchTableData(data);
+  };
 
   const clickHandler = (id: number) => {
     setSelectedJournalId(id);
@@ -107,6 +163,12 @@ const MainView: React.FC = () => {
     }
     setSelectedJournalId(null);
     setActionToNavigate('');
+  };
+
+  const handlePageChange = (newPage: number) => {
+    updatePageInUrl(newPage);
+    const data = parseUrlParams();
+    fetchTableData({ ...data, page: newPage });
   };
 
   return (
@@ -161,7 +223,7 @@ const MainView: React.FC = () => {
       )}
       <button
         className="main-view-btn"
-        onClick={() => fetchTableData({ page: currentPage ? currentPage : 1 })}
+        onClick={() => handleFetchData()}
       >
         <span role="img" aria-label="Оновити" style={{ marginRight: 8 }}>🔄</span>
         Оновити
@@ -172,13 +234,14 @@ const MainView: React.FC = () => {
       >
         <span role="img" aria-label="Фільтр" style={{ marginRight: 8 }}>🔍</span>
         Фільтр
+        {appliedFilters && <span style={{ marginLeft: 4, color: '#4CAF50' }}>●</span>}
       </button>
       {actionToNavigate === 'filter' && (
         <FiltersModal
           open={actionToNavigate === 'filter'}
           onClose={() => setActionToNavigate('')}
           onApply={() => {
-            fetchTableData({page: currentPage });
+            setActionToNavigate('');
           }}
         />
       )}
@@ -191,26 +254,6 @@ const MainView: React.FC = () => {
           Користувачі
         </button>
       )}
-      {/* {actionToNavigate === 'users-admin' && (
-        <UsersAdminModal
-          visible={actionToNavigate === 'users-admin'}
-          onClose={() => setActionToNavigate('')}
-          onSave={(user) => {
-            editUser(user.id, user);
-            setActionToNavigate('');
-          }}
-          onRemove={(userId) => {
-            deleteUser(userId);
-            setActionToNavigate('');
-
-          }}
-          onAdd={(user) => {
-            addUser(user);
-            setActionToNavigate('');
-          }}
-          users={users}
-        />
-      )} */}
       <button
         className="main-view-btn"
         onClick={handleLogout}
@@ -222,7 +265,7 @@ const MainView: React.FC = () => {
       <div className="main-view-pagination">
         <button
           className="main-view-pagination-btn"
-          onClick={() => fetchTableData({page: currentPage ? currentPage - 1 : 1})}
+          onClick={() => handlePageChange((currentPage || 1) - 1)}
           disabled={currentPage === 1}
         >
           <span role="img" aria-label="Попередня сторінка">◀️</span>
@@ -232,7 +275,7 @@ const MainView: React.FC = () => {
         </span>
         <button
           className="main-view-pagination-btn"
-          onClick={() => fetchTableData({page: currentPage ? currentPage + 1 : 1})}
+          onClick={() => handlePageChange((currentPage || 1) + 1)}
           disabled={currentPage === totalPages}
         >
           <span role="img" aria-label="Наступна сторінка">▶️</span>
@@ -252,7 +295,7 @@ const MainView: React.FC = () => {
           <span> Прийнятий в експлуатацію</span>
         </div>
         <div className="main-view-column-sort">
-         <ColumnSort onChange={(sortBy, order) => fetchTableData({ sortBy, order })} />
+         <ColumnSort />
         </div>
       </footer>
       <ToastContainer position="top-center" />

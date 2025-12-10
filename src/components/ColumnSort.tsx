@@ -1,23 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ColumnSortProps, SortByOption, SortOrder } from '../types/components';
 import { SORT_OPTIONS } from '../constants/tableColumns'; // Assuming you have a constants file for sort options
 
 const ColumnSort: React.FC<ColumnSortProps> = ({
     onChange,
 }) => {
-    const [sortBy, setSortBy] = useState<SortByOption>('date');
-    const [order, setOrder] = useState<SortOrder>('asc');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [sortBy, setSortBy] = useState<SortByOption>(() => {
+        return (searchParams.get('sortBy') as SortByOption) || 'condition';
+    });
+    const [order, setOrder] = useState<SortOrder>(() => {
+        return (searchParams.get('order') as SortOrder) || 'asc';
+    });
+
+    // Update local state when URL changes
+    useEffect(() => {
+        const urlSortBy = searchParams.get('sortBy') as SortByOption;
+        const urlOrder = searchParams.get('order') as SortOrder;
+        
+        if (urlSortBy && urlSortBy !== sortBy) {
+            setSortBy(urlSortBy);
+        }
+        if (urlOrder && urlOrder !== order) {
+            setOrder(urlOrder);
+        }
+    }, [searchParams, sortBy, order]);
+
+    const updateUrlParams = (newSortBy: SortByOption, newOrder: SortOrder) => {
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('sortBy', newSortBy);
+        newSearchParams.set('order', newOrder);
+        setSearchParams(newSearchParams);
+    };
 
     const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value as SortByOption;
         setSortBy(value);
-        onChange?.(value, order);
+        updateUrlParams(value, order);
+        onChange?.();
     };
 
     const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value as SortOrder;
         setOrder(value);
-        onChange?.(sortBy, value);
+        updateUrlParams(sortBy, value);
+        onChange?.();
     };
 
     return (

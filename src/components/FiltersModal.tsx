@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTableStore } from '../store-zustand';
 import { useAuthStore } from '../store-auth';
 import './styles/filtersModal.css';
@@ -10,8 +11,23 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   onClose,
   onApply,
 }) => {
-  const initialValues = useTableStore.getState().appliedFilters || {};
-  const [values, setValues] = useState<{ [key: string]: string }>(initialValues);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Parse filters from URL on mount
+  const getFiltersFromUrl = () => {
+    const filtersJson = searchParams.get('filters');
+    if (filtersJson) {
+      try {
+        return JSON.parse(decodeURIComponent(filtersJson));
+      } catch (e) {
+        console.error('Error parsing filters from URL:', e);
+        return {};
+      }
+    }
+    return useTableStore.getState().appliedFilters || {};
+  };
+
+  const [values, setValues] = useState<{ [key: string]: string }>(getFiltersFromUrl());
   const objectTypes = useTableStore(state => state.objectTypes);
   const lookupPlaces = useTableStore(state => state.lookupPlaces);
   const users = useAuthStore(state => state.users);
@@ -41,18 +57,50 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
     }));
   };
 
+  // Update URL with filters
+  const updateFiltersInUrl = (filters: { [key: string]: string }) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    
+    // Remove empty filter values
+    const cleanedFilters = Object.entries(filters).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as { [key: string]: string });
+
+    if (Object.keys(cleanedFilters).length > 0) {
+      newSearchParams.set('filters', encodeURIComponent(JSON.stringify(cleanedFilters)));
+    } else {
+      newSearchParams.delete('filters');
+    }
+    
+    // Reset to page 1 when applying filters
+    newSearchParams.set('page', '1');
+    
+    setSearchParams(newSearchParams);
+  };
+
   let isOpen = open;
 
   const handleApply = () => {
     setFilters(values);
-    onApply();
+    updateFiltersInUrl(values);
     onClose();
     isOpen = false;
+    onApply();
   };
 
   const handleReset = () => {
     setValues({});
     resetFilters();
+    
+    // Remove filters from URL
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete('filters');
+    newSearchParams.set('page', '1');
+    setSearchParams(newSearchParams);
+    
     onApply();
   };
 

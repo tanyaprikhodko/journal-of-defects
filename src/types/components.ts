@@ -42,5 +42,5 @@ export type SortByOption = 'date' | 'severity' | 'status';
 export type SortOrder = 'asc' | 'desc';
 
 export interface ColumnSortProps {
-  onChange?: (sortBy: SortByOption, order: SortOrder) => void;
+  onChange?: () => void;
 }

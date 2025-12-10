@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       } else {
         set({ isAuthenticated: false, currentUser: null });
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const response = await fetch(url);
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -84,7 +84,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -105,7 +105,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const response = await fetch(`${getApiUrl()}/Lookups/regions`);
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join('&nbsp;');
+        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }

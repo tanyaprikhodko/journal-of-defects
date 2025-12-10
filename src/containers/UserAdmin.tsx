@@ -129,7 +129,6 @@ const UserAdmin: React.FC = () => {
       await addUser(userData);
       setUserData(createDefaultUser());
       await fetchUsers();
-      toast.success('Користувача успішно створено');
     } catch (error) {
       console.error('Error creating user:', error);
     } finally {
@@ -147,7 +146,6 @@ const UserAdmin: React.FC = () => {
       setLoading(true);
       await editUser(selectedUserId, userData);
       await fetchUsers();
-      toast.success('Дані користувача успішно оновлено');
     } catch (error) {
       console.error('Error editing user:', error);
     } finally {
@@ -171,7 +169,6 @@ const UserAdmin: React.FC = () => {
       setUserData(createDefaultUser());
       setSelectedUserId(null);
       await fetchUsers();
-      toast.success('Користувача успішно видалено');
     } catch (error) {
       console.error('Error deleting user:', error);
     } finally {
