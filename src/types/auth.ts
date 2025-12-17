@@ -18,7 +18,7 @@ export type User = {
   login: string;
   password: string;
   rank: string;
-  deputyId: number;
+  deputyId: number | null;
   regionId: string;
   roleIds: number[];
   isActive: boolean;

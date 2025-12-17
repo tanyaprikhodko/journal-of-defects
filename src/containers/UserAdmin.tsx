@@ -37,7 +37,7 @@ const UserAdmin: React.FC = () => {
     login: '',
     password: '',
     rank: '',
-    deputyId: 0,
+    deputyId: null,
     regionId: '',
     roleIds: [],
     isActive: true,
@@ -92,6 +92,13 @@ const UserAdmin: React.FC = () => {
       roleIds: checked
         ? [...prev.roleIds, roleId]
         : prev.roleIds.filter((id) => id !== roleId),
+    }));
+  }, []);
+
+  const handleDeputyChange = React.useCallback((deputyId: number | null) => {
+    setUserData((prev) => ({
+      ...prev,
+      deputyId: deputyId || null,
     }));
   }, []);
 
@@ -342,15 +349,22 @@ const UserAdmin: React.FC = () => {
               </div>
 
               <div className="input-group">
-                <label htmlFor="create-deputyId">Заступник (ID)</label>
-                <input
-                  type="number"
+                <label htmlFor="create-deputyId">Заступник</label>
+                <Autocomplete
                   id="create-deputyId"
-                  name="deputyId"
-                  value={userData.deputyId}
-                  onChange={handleChange}
+                  options={users}
+                  getOptionLabel={(option) => `${option.name} - ${option.rank || 'Без посади'}`}
+                  value={users.find((user) => user.id === userData.deputyId) || null}
+                  onChange={(_, value) => handleDeputyChange(value?.id || null)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder="Оберіть заступника"
+                      className="select-input"
+                    />
+                  )}
                   disabled={loading}
-                  className="text-input"
+                  disableClearable={false}
                 />
               </div>
             </div>
@@ -558,15 +572,23 @@ const UserAdmin: React.FC = () => {
                   </div>
 
                   <div className="input-group">
-                    <label htmlFor="edit-deputyId">Заступник (ID)</label>
-                    <input
-                      type="number"
+                    <label htmlFor="edit-deputyId">Заступник</label>
+                    <Autocomplete
                       id="edit-deputyId"
-                      name="deputyId"
-                      value={userData.deputyId}
-                      onChange={handleChange}
+                      options={users}
+                      getOptionLabel={(option) => `${option.name} - ${option.rank || 'Без посади'}`}
+                      value={users.find((user) => user.id === userData.deputyId) || null}
+                      onChange={(_, value) => handleDeputyChange(value?.id || null)}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder="Оберіть заступника"
+                          className="select-input"
+                          style={{ height: '32px' }}
+                        />
+                      )}
                       disabled={loading}
-                      className="text-input"
+                      disableClearable={false}
                     />
                   </div>
                 </div>
@@ -682,6 +704,9 @@ const UserAdmin: React.FC = () => {
                 </div>
                 <div className="preview-row">
                   <strong>Регіон:</strong> {departments.find(d => d.id === userData.regionId)?.name || 'Не вказано'}
+                </div>
+                <div className="preview-row">
+                  <strong>Заступник:</strong> {users.find(u => u.id === userData.deputyId)?.name || 'Не вказано'}
                 </div>
                 <div className="preview-row">
                   <strong>Ролі:</strong> {userData.userRoles.map(r => r.name).join(', ') || 'Не вказано'}
