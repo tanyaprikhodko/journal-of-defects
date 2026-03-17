@@ -36,7 +36,7 @@ export interface TableRow {
 }
 
 export interface TableRowDisplay {
-  id: number;
+  id: number | null;
   condition: string;
   substation: string;
   order: number | string;

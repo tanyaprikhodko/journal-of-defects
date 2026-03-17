@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { toast } from 'react-toastify';
 import { User, AuthState } from './types';
 import { getApiUrl } from './config';
+import { fetchWithAuth } from './utils';
 
 export const useAuthStore = create<AuthState>((set) => ({
   departments: [],
@@ -35,7 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error(errorMessage);
       }
 
-    } catch(error) {
+    } catch (error) {
       set({ isAuthenticated: false, currentUser: null });
       console.error(error)
       return false;
@@ -52,7 +53,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchUsers: async (departmentId) => {
     try {
       const url = departmentId
-        ? `${getApiUrl()}/Users/by-region/${departmentId ??  localStorage.getItem('departmentId')}`
+        ? `${getApiUrl()}/Users/by-region/${departmentId ?? localStorage.getItem('departmentId')}`
         : `${getApiUrl()}/Users`;
       const response = await fetch(url);
       if (!response.ok) {
@@ -66,7 +67,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         users = users.sort((a, b) => a.name.localeCompare(b.name));
       }
       set({ users });
-    } catch(error) {
+    } catch (error) {
       set({ users: [] });
       console.error(error)
       throw error;
@@ -74,12 +75,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   fetchUserById: async (id: number): Promise<User | null> => {
     try {
-      const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Users/${id}`, {
+      const response = await fetchWithAuth(`${getApiUrl()}/Users/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
         },
       });
       if (!response.ok) {
@@ -94,7 +93,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }));
 
       return user;
-    } catch(error) {
+    } catch (error) {
       set({ users: [] });
       console.error(error)
       return null;
@@ -114,7 +113,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         departments = departments.sort((a, b) => a.name.localeCompare(b.name));
       }
       set({ departments });
-    } catch(error) {
+    } catch (error) {
       set({ departments: [] });
       console.error(error);
       throw error;
@@ -132,7 +131,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       const response = await fetch(`${getApiUrl()}/Authentication/refresh-token`, {
         method: 'POST',
-         headers: {
+        headers: {
           'Content-Type': 'application/json',
           ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
         },

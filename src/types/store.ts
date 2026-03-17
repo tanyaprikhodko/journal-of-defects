@@ -71,7 +71,7 @@ export interface TableState {
   substations?: Substation[];
   roles?: Array<{ id: number; name: string }>;
   appliedFilters: { [key: string]: string } | null;
-  fetchTableData: (params: { page?: number; sortBy?: string; order?: string; filter?: { [key: string]: string } }) => Promise<void>;
+  fetchTableData: (params: { page?: number; sortBy?: string; order?: string; filters?: string; search?: string }) => Promise<void>;
   fetchTableDataById: (id: number) => Promise<void>;
   getCommentsById: (id: number) => Promise<void>;
   addComment: (comment: CommentRequest) => Promise<void>;

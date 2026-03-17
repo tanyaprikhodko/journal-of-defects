@@ -69,11 +69,21 @@
   margin-bottom: 64px;
 }
 
+.main-view-search-input {
+  width: 33%;
+  padding: 10px 15px;
+  margin-top: 32px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  align-self: center;
+}
+
 .main-view-footer {
   display: flex;
   justify-content: space-between;
   background-color: #fff;
-  box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
   padding: 16px 32px;
   font-size: 14px;
   color: #000;
@@ -100,9 +110,11 @@
 .main-view-legend-moved {
   background-color: yellow;
 }
+
 .main-view-legend-overdue {
   background-color: red;
 }
+
 .main-view-legend-accepted {
   background-color: green;
 }

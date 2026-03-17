@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { toast } from 'react-toastify';
-import { parseJwt } from './utils';
-import { 
-  createJournalPayload, 
-  TableRow, 
-  CommentRequest, 
+import { parseJwt, fetchWithAuth } from './utils';
+import {
+  createJournalPayload,
+  TableRow,
+  CommentRequest,
   TableState,
-  Person 
+  Person
 } from './types';
 import { getApiUrl } from './config';
 
@@ -18,7 +18,7 @@ export const useTableStore = create<TableState>((set, get) => ({
   usersByRegionId: {},
   appliedFilters: null,
 
-  setFilters: (filters: {[key: string]: string } | null): void => {
+  setFilters: (filters: { [key: string]: string } | null): void => {
     set({ appliedFilters: filters });
   },
 
@@ -26,22 +26,21 @@ export const useTableStore = create<TableState>((set, get) => ({
     set({ appliedFilters: null });
   },
 
-  fetchTableData: async (params: { page?: number; sortBy?: string; order?: string; filters?: string }) => {
+  fetchTableData: async (params: { page?: number; sortBy?: string; order?: string; filters?: string, search?: string }) => {
     try {
-      const token = localStorage.getItem('accessToken');
       const searchParams = new URLSearchParams({
         page: params?.page ? params.page.toString() : get().currentPage?.toString() || '1',
         ColumnName: params?.sortBy || '',
         IsAscending: params?.order === 'asc' ? 'true' : 'false',
         ItemsPerPage: '20',
         ...get().appliedFilters ? get().appliedFilters : '',
+        SearchQuery: params?.search || '',
       });
 
-      const response = await fetch(`${getApiUrl()}/Journals?${searchParams.toString()}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      const response = await fetchWithAuth(`${getApiUrl()}/Journals?${searchParams.toString()}`, {
         method: 'GET',
       });
-      if (!response.ok){
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -66,11 +65,8 @@ export const useTableStore = create<TableState>((set, get) => ({
   fetchTableDataById: async (id: number) => {
     if (get().tableDataById[id]) return;
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Journals/${id}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (!response.ok){
+      const response = await fetchWithAuth(`${getApiUrl()}/Journals/${id}`);
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -92,11 +88,8 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   getCommentsById: async (id: number) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Journals/${id}/comments`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (!response.ok){
+      const response = await fetchWithAuth(`${getApiUrl()}/Journals/${id}/comments`);
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -120,15 +113,14 @@ export const useTableStore = create<TableState>((set, get) => ({
       const token = localStorage.getItem('accessToken');
       const user = parseJwt(token || '');
       if (!user?.nameidentifier) throw new Error('User not found');
-      const response = await fetch(`${getApiUrl()}/Comments`, {
+      const response = await fetchWithAuth(`${getApiUrl()}/Comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ body: comment.body, authorId: user.nameidentifier, journalId: comment.journalId }),
       });
-      if (!response.ok){
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -150,11 +142,8 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   fetchObjectTypes: async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Lookups/objectTypes`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (!response.ok){
+      const response = await fetchWithAuth(`${getApiUrl()}/Lookups/objectTypes`);
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -170,11 +159,8 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   fetchLookupPlaces: async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Lookups/places`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (!response.ok){
+      const response = await fetchWithAuth(`${getApiUrl()}/Lookups/places`);
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage as string);
@@ -190,12 +176,9 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   fetchUsersByRegionId: async () => {
     try {
-      const token = localStorage.getItem('accessToken');
       const regionId = localStorage.getItem('departmentId');
-      const response = await fetch(`${getApiUrl()}/Users/by-region/${regionId}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (!response.ok){
+      const response = await fetchWithAuth(`${getApiUrl()}/Users/by-region/${regionId}`);
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -215,13 +198,10 @@ export const useTableStore = create<TableState>((set, get) => ({
     }
   },
 
- fetchSubstations: async () => {
+  fetchSubstations: async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Lookups/substationRegions`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (!response.ok){
+      const response = await fetchWithAuth(`${getApiUrl()}/Lookups/substationRegions`);
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -233,16 +213,14 @@ export const useTableStore = create<TableState>((set, get) => ({
       console.error('Error fetching substations:', error);
       throw error;
     }
- },
+  },
 
   deleteJournal: async (id: number) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Journals/${id}`, {
+      const response = await fetchWithAuth(`${getApiUrl()}/Journals/${id}`, {
         method: 'DELETE',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok){
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -259,12 +237,10 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   createJournal: async (journal: createJournalPayload, isEditMode: boolean, id: number | null) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Journals/${ isEditMode ? id : ''}`, {
+      const response = await fetchWithAuth(`${getApiUrl()}/Journals/${isEditMode ? id : ''}`, {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(journal),
       });
@@ -287,14 +263,11 @@ export const useTableStore = create<TableState>((set, get) => ({
       throw error;
     }
   },
-  
+
   fetchRoles: async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Lookups/roles`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      });
-      if (!response.ok){
+      const response = await fetchWithAuth(`${getApiUrl()}/Lookups/roles`);
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -311,10 +284,8 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   deleteUser: async (userId: number) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Users/${userId}`, {
+      const response = await fetchWithAuth(`${getApiUrl()}/Users/${userId}`, {
         method: 'DELETE',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -331,16 +302,14 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   addUser: async (user: Partial<Person>) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Users`, {
+      const response = await fetchWithAuth(`${getApiUrl()}/Users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(user),
       });
-      if (!response.ok){
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);
@@ -355,16 +324,14 @@ export const useTableStore = create<TableState>((set, get) => ({
 
   editUser: async (userId: number, user: Partial<Person>) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${getApiUrl()}/Users/${userId}`, {
+      const response = await fetchWithAuth(`${getApiUrl()}/Users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(user),
       });
-      if (!response.ok){
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = Object.values(errorData?.errors || {}).join(' ');
         toast.error(errorMessage);

@@ -36,14 +36,14 @@ const MainView: React.FC = () => {
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const tableData = useTableStore(state => state.tableData);
   const totalPages = useTableStore(state => state.totalPages);
   const currentPage = useTableStore(state => state.currentPage);
   const appliedFilters = useTableStore(state => state.appliedFilters);
   const fetchTableData = useTableStore(state => state.fetchTableData);
   const deleteJournal = useTableStore(state => state.deleteJournal);
-  const setAppliedFilters = useTableStore(state => state.setAppliedFilters);
+  const setFilters = useTableStore(state => state.setFilters);
   const logout = useAuthStore(state => state.logout);
   const fetchUsers = useAuthStore(state => state.fetchUsers);
   const jwt = localStorage.getItem('accessToken');
@@ -53,14 +53,16 @@ const MainView: React.FC = () => {
   const [selectedJournalId, setSelectedJournalId] = React.useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  const [searchValue, setSearchValue] = React.useState<string>('');
 
   // Watch for search params changes
   React.useEffect(() => {
     const data = {
-      ...(searchParams.get('page') ? { page: searchParams.get('page') } : {}),
-      ...(searchParams.get('sortBy') ? { sortBy: searchParams.get('sortBy') } : {}),
-      ...(searchParams.get('order') ? { order: searchParams.get('order') } : {}),
-      ...(searchParams.get('filters') ? { filters: searchParams.get('filters') } : {}),
+      ...(searchParams.get('page') ? { page: parseInt(searchParams.get('page')!, 10) } : {}),
+      ...(searchParams.get('sortBy') ? { sortBy: searchParams.get('sortBy')! } : {}),
+      ...(searchParams.get('order') ? { order: searchParams.get('order')! } : {}),
+      ...(searchParams.get('filters') ? { filters: searchParams.get('filters')! } : {}),
+      ...(searchParams.get('search') ? { search: searchParams.get('search')! } : {}),
     };
 
     fetchTableData(data);
@@ -72,7 +74,8 @@ const MainView: React.FC = () => {
     const sortBy = searchParams.get('sortBy') || undefined;
     const order = searchParams.get('order') || undefined;
     const filtersJson = searchParams.get('filters');
-    
+    const search = searchParams.get('search') || undefined;
+
     let filters = null;
     if (filtersJson) {
       try {
@@ -82,7 +85,7 @@ const MainView: React.FC = () => {
       }
     }
 
-    return { page, sortBy, order, filters };
+    return { page, sortBy, order, filters, search };
   }, [searchParams]);
 
   // Update URL with page parameter
@@ -95,17 +98,21 @@ const MainView: React.FC = () => {
   // Load data from URL on mount
   React.useEffect(() => {
     if (isInitialLoad) {
-      const { page, sortBy, order, filters } = parseUrlParams();
-      
+      const { page, sortBy, order, filters, search } = parseUrlParams();
+
       if (filters) {
-        setAppliedFilters(filters);
+        setFilters(filters);
       }
-      
-      fetchTableData({ page, sortBy, order, filter: filters || undefined });
+
+      if (search) {
+        setSearchValue(search);
+      }
+
+      fetchTableData({ page, sortBy, order, filters: filters ? JSON.stringify(filters) : undefined, search: search || '' });
       fetchUsers();
       setIsInitialLoad(false);
     }
-  }, [isInitialLoad, parseUrlParams, setAppliedFilters, fetchTableData, fetchUsers]);
+  }, [isInitialLoad, parseUrlParams, setFilters, fetchTableData, fetchUsers]);
 
   const preparedTableData: TableRowDisplay[] = React.useMemo(() => {
     return tableData.map(item => {
@@ -122,7 +129,7 @@ const MainView: React.FC = () => {
         responsible: item.responsible ? `${item.responsible?.name} - ${item.responsible?.rank}` : '',
         completedBy: item.completedBy ? `${item.completedBy?.name} - ${item.completedBy?.rank}` : '',
         acceptedBy: item.confirmedBy ? `${item.confirmedBy?.name} - ${item.confirmedBy?.rank}` : '',
-        confirmedBy: item.acceptedBy ? `${item.acceptedBy?.name} - ${item.acceptedBy?.rank}` : '', 
+        confirmedBy: item.acceptedBy ? `${item.acceptedBy?.name} - ${item.acceptedBy?.rank}` : '',
       }
     });
   }, [tableData]);
@@ -155,7 +162,7 @@ const MainView: React.FC = () => {
 
   const isObserver = () => { return currentUserRole.includes('Перегляд всіх журналів'); }
 
-  const isCreateDisabled = () => { return currentUserRole.includes('Адміністратор') && !isObserver(); }
+  const isCreateDisabled = () => { return !currentUserRole.includes('Диспетчер') || !currentUserRole.includes('Старший диспетчер') }
 
   const handleDeleteJournal = () => {
     if (selectedJournalId) {
@@ -171,117 +178,145 @@ const MainView: React.FC = () => {
     fetchTableData({ ...data, page: newPage });
   };
 
+  // Debounced search handler
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const newSearchParams = new URLSearchParams(searchParams);
+      if (searchValue) {
+        newSearchParams.set('search', searchValue);
+      } else {
+        newSearchParams.delete('search');
+      }
+      // Reset to page 1 when search changes
+      newSearchParams.set('page', '1');
+      setSearchParams(newSearchParams);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchValue]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
   return (
     <div className="main-view-root">
       <div className="main-view-header">
-      <button
-        className={`main-view-btn${actionToNavigate === 'create' ? ' active' : ''}`}
-        onClick={() => navigate('/create')}
-        disabled={isCreateDisabled()}
-      >
-        <span role="img" aria-label="Створити" style={{ marginRight: 8 }}>➕</span>
-        Створити
-      </button>
-      <button
-        className={`main-view-btn${actionToNavigate === 'create-copy' ? ' active' : ''}`}
-        onClick={() => actionToNavigate === 'create-copy' ? setActionToNavigate('') : setActionToNavigate('create-copy')}
-        disabled={isCreateDisabled()}
-      >
-        <span role="img" aria-label="Копія" style={{ marginRight: 8 }}>📋</span>
-        Створити копію
-      </button>
-      <button
-        className={`main-view-btn${actionToNavigate === 'edit' ? ' active' : ''}`}
-        onClick={() => actionToNavigate === 'edit' ? setActionToNavigate('') : setActionToNavigate('edit')}
-        disabled={isObserver()}
-      >
-        <span role="img" aria-label="Редагувати" style={{ marginRight: 8 }}>✏️</span>
-        Редагувати
-      </button>
-      <button
-        className={`main-view-btn${actionToNavigate === 'delete' ? ' active' : ''}`}
-        onClick={() => actionToNavigate === 'delete' ? setActionToNavigate('') : setActionToNavigate('delete')}
-        disabled={isObserver()}
-      >
-        <span role="img" aria-label="Видалити" style={{ marginRight: 8 }}>🗑️</span>
-        Видалити
-      </button>
-      {showDeleteModal && (
-        <DeleteConfirmation
-          isOpen={showDeleteModal}
-          onConfirm={() => {
-            handleDeleteJournal();
-            setShowDeleteModal(false);
-            setSelectedJournalId(null);
-          }}
-          onCancel={() => {
-            setShowDeleteModal(false);
-            setSelectedJournalId(null);
-            setActionToNavigate('');
-          }}
-        />
-      )}
-      <button
-        className="main-view-btn"
-        onClick={() => handleFetchData()}
-      >
-        <span role="img" aria-label="Оновити" style={{ marginRight: 8 }}>🔄</span>
-        Оновити
-      </button>
-      <button
-        className="main-view-btn"
-        onClick={() => actionToNavigate === 'filter' ? setActionToNavigate('') : setActionToNavigate('filter')}
-      >
-        <span role="img" aria-label="Фільтр" style={{ marginRight: 8 }}>🔍</span>
-        Фільтр
-        {appliedFilters && <span style={{ marginLeft: 4, color: '#4CAF50' }}>●</span>}
-      </button>
-      {actionToNavigate === 'filter' && (
-        <FiltersModal
-          open={actionToNavigate === 'filter'}
-          onClose={() => setActionToNavigate('')}
-          onApply={() => {
-            setActionToNavigate('');
-          }}
-        />
-      )}
-      {currentUserRole.includes('Адміністратор') && (
+        <button
+          className={`main-view-btn${actionToNavigate === 'create' ? ' active' : ''}`}
+          onClick={() => navigate('/create')}
+          disabled={isCreateDisabled()}
+        >
+          <span role="img" aria-label="Створити" style={{ marginRight: 8 }}>➕</span>
+          Створити
+        </button>
+        <button
+          className={`main-view-btn${actionToNavigate === 'create-copy' ? ' active' : ''}`}
+          onClick={() => actionToNavigate === 'create-copy' ? setActionToNavigate('') : setActionToNavigate('create-copy')}
+          disabled={isCreateDisabled()}
+        >
+          <span role="img" aria-label="Копія" style={{ marginRight: 8 }}>📋</span>
+          Створити копію
+        </button>
+        <button
+          className={`main-view-btn${actionToNavigate === 'edit' ? ' active' : ''}`}
+          onClick={() => actionToNavigate === 'edit' ? setActionToNavigate('') : setActionToNavigate('edit')}
+          disabled={isObserver()}
+        >
+          <span role="img" aria-label="Редагувати" style={{ marginRight: 8 }}>✏️</span>
+          Редагувати
+        </button>
+        <button
+          className={`main-view-btn${actionToNavigate === 'delete' ? ' active' : ''}`}
+          onClick={() => actionToNavigate === 'delete' ? setActionToNavigate('') : setActionToNavigate('delete')}
+          disabled={isObserver()}
+        >
+          <span role="img" aria-label="Видалити" style={{ marginRight: 8 }}>🗑️</span>
+          Видалити
+        </button>
+        {showDeleteModal && (
+          <DeleteConfirmation
+            isOpen={showDeleteModal}
+            onConfirm={() => {
+              handleDeleteJournal();
+              setShowDeleteModal(false);
+              setSelectedJournalId(null);
+            }}
+            onCancel={() => {
+              setShowDeleteModal(false);
+              setSelectedJournalId(null);
+              setActionToNavigate('');
+            }}
+          />
+        )}
         <button
           className="main-view-btn"
-           onClick={() => navigate('/users-admin')}
+          onClick={() => handleFetchData()}
         >
-          <span role="img" aria-label="Користувачі" style={{ marginRight: 8 }}>👥</span>
-          Користувачі
+          <span role="img" aria-label="Оновити" style={{ marginRight: 8 }}>🔄</span>
+          Оновити
         </button>
-      )}
-      <button
-        className="main-view-btn"
-        onClick={handleLogout}
-      >
-        <span role="img" aria-label="Вихід" style={{ marginRight: 8 }}>🚪</span>
-        Вихід
-      </button>
-      {/* Pagination Controls */}
-      <div className="main-view-pagination">
         <button
-          className="main-view-pagination-btn"
-          onClick={() => handlePageChange((currentPage || 1) - 1)}
-          disabled={currentPage === 1}
+          className="main-view-btn"
+          onClick={() => actionToNavigate === 'filter' ? setActionToNavigate('') : setActionToNavigate('filter')}
         >
-          <span role="img" aria-label="Попередня сторінка">◀️</span>
+          <span role="img" aria-label="Фільтр" style={{ marginRight: 8 }}>🔍</span>
+          Фільтр
+          {appliedFilters && <span style={{ marginLeft: 4, color: '#4CAF50' }}>●</span>}
         </button>
-        <span className="main-view-pagination-info">
-          Сторінка {currentPage} з {totalPages}
-        </span>
+        {actionToNavigate === 'filter' && (
+          <FiltersModal
+            open={actionToNavigate === 'filter'}
+            onClose={() => setActionToNavigate('')}
+            onApply={() => {
+              setActionToNavigate('');
+            }}
+          />
+        )}
+        {currentUserRole.includes('Адміністратор') && (
+          <button
+            className="main-view-btn"
+            onClick={() => navigate('/users-admin')}
+          >
+            <span role="img" aria-label="Користувачі" style={{ marginRight: 8 }}>👥</span>
+            Користувачі
+          </button>
+        )}
         <button
-          className="main-view-pagination-btn"
-          onClick={() => handlePageChange((currentPage || 1) + 1)}
-          disabled={currentPage === totalPages}
+          className="main-view-btn"
+          onClick={handleLogout}
         >
-          <span role="img" aria-label="Наступна сторінка">▶️</span>
+          <span role="img" aria-label="Вихід" style={{ marginRight: 8 }}>🚪</span>
+          Вихід
         </button>
+        {/* Pagination Controls */}
+        <div className="main-view-pagination">
+          <button
+            className="main-view-pagination-btn"
+            onClick={() => handlePageChange((currentPage || 1) - 1)}
+            disabled={currentPage === 1}
+          >
+            <span role="img" aria-label="Попередня сторінка">◀️</span>
+          </button>
+          <span className="main-view-pagination-info">
+            Сторінка {currentPage} з {totalPages}
+          </span>
+          <button
+            className="main-view-pagination-btn"
+            onClick={() => handlePageChange((currentPage || 1) + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <span role="img" aria-label="Наступна сторінка">▶️</span>
+          </button>
+        </div>
       </div>
-      </div>
+      <input
+        type="text"
+        placeholder="Пошук..."
+        className="main-view-search-input"
+        value={searchValue}
+        onChange={handleSearchChange}
+      />
       <div className="main-view-table-container">
         <Table columns={tableColumns} data={preparedTableData} click={clickHandler} activeRowId={selectedJournalId} />
       </div>
@@ -295,7 +330,7 @@ const MainView: React.FC = () => {
           <span> Прийнятий в експлуатацію</span>
         </div>
         <div className="main-view-column-sort">
-         <ColumnSort />
+          <ColumnSort />
         </div>
       </footer>
       <ToastContainer position="top-center" />

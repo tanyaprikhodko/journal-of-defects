@@ -1,3 +1,5 @@
+export * from './apiInterceptor';
+
 export const parseJwt = (token: string) => {
   try {
     const base64Url = token.split('.')[1];
@@ -11,7 +13,7 @@ export const parseJwt = (token: string) => {
 
     const payload = JSON.parse(jsonPayload);
     const preparedKeys = Object.keys(payload).reduce((acc, key) => {
-    const preparedKey = key.substring(key.lastIndexOf('/') + 1);
+      const preparedKey = key.substring(key.lastIndexOf('/') + 1);
       acc[preparedKey] = payload[key];
       return acc;
     }, {} as Record<string, any>);
