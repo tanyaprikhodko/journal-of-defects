@@ -1,11 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import AuthorizeContainer from './containers/AuthorizeContainer';   
+import AuthorizeContainer from './containers/AuthorizeContainer';
 import MainView from './containers/MainView';
 import NotFoundPage from './containers/NotFoundPage';
 import EditPage from './containers/EditPage';
 import CreatePage from './containers/CreatePage';
 import UserAdmin from './containers/UserAdmin'
+import HelpPage from './containers/HelpPage';
 
 const isAuthenticated = () => {
     return localStorage.getItem('accessToken') !== null;
@@ -24,53 +25,54 @@ const AppRouter: React.FC = () => {
     };
     return (
         <Router>
-            <div style={{ height: '100vh',width: '100vw', display: 'flex', flexDirection: 'column', backgroundColor: '#f7fdfe', overflow: 'hidden' }}>
-            <Routes>
-                <Route path="/" element={<RedirectToProperPage />} />
-                <Route path="/login" element={<AuthorizeContainer />} />
-                <Route
-                    path="/main-view"
-                    element={
-                        <PrivateRoute>
-                            <MainView />
-                        </PrivateRoute>
-                    }
-                />
-                <Route
-                    path="/edit/:id"
-                    element={
-                        <PrivateRoute>
-                            <EditPage />
-                        </PrivateRoute>
-                    }
-                />
-                <Route
-                    path="/create"
-                    element={
-                        <PrivateRoute>
-                            <CreatePage />
-                        </PrivateRoute>
-                    }
-                />
-                <Route 
-                    path="/users-admin"
-                    element={
-                        <PrivateRoute>
-                            <UserAdmin />
-                        </PrivateRoute>
-                    }
-                />
-                <Route
-                    path="/create-copy/:id"
-                    element={
-                        <PrivateRoute>
-                            <EditPage />
-                        </PrivateRoute>
-                    }
-                />
-                <Route path="/edit" element={<Navigate to="/main-view" replace />} />
-                <Route path="*" element={<NotFoundPage />} />
-            </Routes>
+            <div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', backgroundColor: '#f7fdfe', overflow: 'hidden' }}>
+                <Routes>
+                    <Route path="/" element={<RedirectToProperPage />} />
+                    <Route path="/login" element={<AuthorizeContainer />} />
+                    <Route path="/help" element={<HelpPage />} />
+                    <Route
+                        path="/main-view"
+                        element={
+                            <PrivateRoute>
+                                <MainView />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/edit/:id"
+                        element={
+                            <PrivateRoute>
+                                <EditPage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/create"
+                        element={
+                            <PrivateRoute>
+                                <CreatePage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/users-admin"
+                        element={
+                            <PrivateRoute>
+                                <UserAdmin />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/create-copy/:id"
+                        element={
+                            <PrivateRoute>
+                                <EditPage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route path="/edit" element={<Navigate to="/main-view" replace />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                </Routes>
             </div>
         </Router>
     );

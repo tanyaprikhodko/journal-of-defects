@@ -1,54 +1,43 @@
-# React + TypeScript + Vite
+# Journal of Defects
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Journal of Defects is a React + TypeScript frontend for defect journal management.
+It supports authentication, journal record lifecycle management, comments, filtering/sorting/search, and user administration.
 
-Currently, two official plugins are available:
+## Documentation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Project documentation is organized in the `docs` folder:
 
-## Expanding the ESLint configuration
+- `docs/PROJECT_OVERVIEW.md` - product purpose, flows, routes, and setup summary
+- `docs/ARCHITECTURE_AND_CODEMAP.md` - architecture, API flow, state management, file-by-file map
+- `docs/KNOWN_ISSUES_AND_RECOMMENDATIONS.md` - current risks and prioritized improvements
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Quick Start
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+1. Install dependencies:
+   `npm install`
+2. Create environment file (if missing):
+   `cp -n .env.dist .env`
+3. Start development server:
+   `npm run dev`
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Default API URL template:
+- `VITE_API_URL=http://localhost:5188/api`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Scripts
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+- `npm run dev` - run dev server
+- `npm run build` - type-check and build production bundle
+- `npm run lint` - run ESLint
+- `npm run preview` - preview production build locally
+
+## Tech Stack
+
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Zustand
+- TanStack React Table
+- React Toastify
+- MUI and Ant Design
+- SCSS/CSS

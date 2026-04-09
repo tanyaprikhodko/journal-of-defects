@@ -1,0 +1,184 @@
+.help-page-root {
+    height: 100vh;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #f7fdfe 0%, #eef8fb 100%);
+    color: #1d2a34;
+}
+
+.help-page-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid #d6e4ea;
+}
+
+.help-page-header h1 {
+    margin: 0;
+    font-size: 30px;
+}
+
+.help-page-header p {
+    margin: 6px 0 0;
+    color: #4e6370;
+}
+
+.help-page-back-btn {
+    border: 1px solid #80a8bb;
+    background: #fff;
+    color: #23485a;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.help-page-back-btn:hover {
+    background: #eaf6fb;
+}
+
+.help-page-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    gap: 18px;
+}
+
+.help-page-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #d8e5eb;
+    padding: 16px;
+}
+
+.help-page-collapsible {
+    padding: 0;
+    overflow: hidden;
+}
+
+.help-page-summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    user-select: none;
+}
+
+.help-page-summary::-webkit-details-marker {
+    display: none;
+}
+
+.help-page-summary::after {
+    content: '+';
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #bfd2dc;
+    color: #2a4f61;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.help-page-collapsible[open] .help-page-summary::after {
+    content: '−';
+}
+
+.help-page-collapsible-content {
+    padding: 0 16px 16px;
+}
+
+.help-page-note ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.help-page-note p {
+    color: #47606f;
+}
+
+.help-page-roles-intro {
+    margin: 8px 0 12px;
+    color: #47606f;
+}
+
+.help-page-roles-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #2c4351;
+    display: grid;
+    gap: 8px;
+}
+
+.help-page-text h3 {
+    margin: 0 0 8px;
+}
+
+.help-page-howto-title {
+    margin: 0 0 8px;
+    color: #123849;
+}
+
+.help-page-text p {
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+
+.help-page-steps-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #324b58;
+    display: grid;
+    gap: 16px;
+}
+
+.help-page-step-item {
+    margin-bottom: 0;
+}
+
+.help-page-step-text {
+    margin: 0 0 10px;
+    line-height: 1.45;
+}
+
+.help-page-image-group {
+    display: grid;
+    gap: 10px;
+}
+
+.help-page-image {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid #e0ebf0;
+}
+
+@media (max-width: 768px) {
+    .help-page-header {
+        padding: 14px;
+    }
+
+    .help-page-header h1 {
+        font-size: 24px;
+    }
+
+    .help-page-content {
+        padding: 14px;
+    }
+
+    .help-page-back-btn {
+        padding: 8px 12px;
+    }
+}

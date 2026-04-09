@@ -273,6 +273,13 @@ const MainView: React.FC = () => {
             }}
           />
         )}
+        <button
+          className="main-view-btn"
+          onClick={() => navigate('/help')}
+        >
+          <span role="img" aria-label="Довідка" style={{ marginRight: 8 }}>📘</span>
+          Довідка
+        </button>
         {currentUserRole.includes('Адміністратор') && (
           <button
             className="main-view-btn"

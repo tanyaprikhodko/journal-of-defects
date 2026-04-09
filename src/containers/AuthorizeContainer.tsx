@@ -89,9 +89,9 @@ const AuthorizeContainer: React.FC = () => {
                         onChange={(_, newValue) => setUser(newValue ? newValue.login : '')}
                         disabled={!department}
                         renderOption={(props, option) => (
-                          <li {...props} key={option.id}>
-                            {option.name}
-                          </li>
+                            <li {...props} key={option.id}>
+                                {option.name}
+                            </li>
                         )}
                         renderInput={(params) => (
                             <TextField
@@ -105,7 +105,7 @@ const AuthorizeContainer: React.FC = () => {
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                     />
                 </div>
-                <div  className='option'>
+                <div className='option'>
                     <label htmlFor="password">
                         Пароль
                     </label>
@@ -118,8 +118,8 @@ const AuthorizeContainer: React.FC = () => {
                     />
                 </div>
                 <button type="submit" className='button'>
-                <span className='button-text'>Увійти</span>
-                <span className='button-icon'>🔑</span>
+                    <span className='button-text'>Увійти</span>
+                    <span className='button-icon'>🔑</span>
                 </button>
             </form>
             <ToastContainer position="top-center" />
