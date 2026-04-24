@@ -24,7 +24,7 @@ const UserAdmin: React.FC = () => {
   const addUser = useTableStore(state => state.addUser);
   const editUser = useTableStore(state => state.editUser);
   const deleteUser = useTableStore(state => state.deleteUser);
-  
+
   const departments = useAuthStore(state => state.departments) || [];
   const users = useAuthStore(state => state.users) || [];
   const roles = useTableStore(state => state.roles) || [];
@@ -42,6 +42,7 @@ const UserAdmin: React.FC = () => {
     roleIds: [],
     isActive: true,
     isLocked: false,
+    isResponsibleForRegion: false,
     userMessage: '',
     userRoles: [],
   }), []);
@@ -108,10 +109,10 @@ const UserAdmin: React.FC = () => {
       setUserData(createDefaultUser());
       return;
     }
-    
+
     setSelectedUserId(userId);
     setLoading(true);
-    
+
     try {
       const user = await fetchUserById(userId);
       if (user) {
@@ -165,7 +166,7 @@ const UserAdmin: React.FC = () => {
       toast.error('Оберіть користувача для видалення');
       return;
     }
-    
+
     if (!window.confirm(`Ви впевнені, що хочете видалити користувача "${userData.name}"?`)) {
       return;
     }
@@ -239,7 +240,7 @@ const UserAdmin: React.FC = () => {
         {activeTab === 'create' && (
           <form className="user-form" onSubmit={handleCreateUser}>
             <h3>Створення нового користувача</h3>
-            
+
             <div className="form-row">
               <div className="input-group">
                 <label htmlFor="create-name">Ім'я *</label>
@@ -408,6 +409,17 @@ const UserAdmin: React.FC = () => {
                 />
                 <span>Заблокований</span>
               </label>
+
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="isResponsibleForRegion"
+                  checked={userData.isResponsibleForRegion}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+                <span>Відповідальний за регіон</span>
+              </label>
             </div>
 
             <div className="input-group">
@@ -434,7 +446,7 @@ const UserAdmin: React.FC = () => {
         {activeTab === 'edit' && (
           <form className="user-form" onSubmit={handleEditUser}>
             <h3>Редагування користувача</h3>
-            
+
             <div className="input-group">
               <label htmlFor="edit-userSelect">Оберіть користувача *</label>
               <Autocomplete
@@ -632,6 +644,17 @@ const UserAdmin: React.FC = () => {
                     />
                     <span>Заблокований</span>
                   </label>
+
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="isResponsibleForRegion"
+                      checked={userData.isResponsibleForRegion}
+                      onChange={handleChange}
+                      disabled={loading}
+                    />
+                    <span>Відповідальний за регіон</span>
+                  </label>
                 </div>
 
                 <div className="input-group">
@@ -660,7 +683,7 @@ const UserAdmin: React.FC = () => {
         {activeTab === 'delete' && (
           <div className="user-form">
             <h3>Видалення користувача</h3>
-            
+
             <div className="input-group">
               <label htmlFor="delete-userSelect">Оберіть користувача для видалення *</label>
               <Autocomplete
@@ -712,7 +735,7 @@ const UserAdmin: React.FC = () => {
                   <strong>Ролі:</strong> {userData.userRoles.map(r => r.name).join(', ') || 'Не вказано'}
                 </div>
                 <div className="preview-row">
-                  <strong>Статус:</strong> 
+                  <strong>Статус:</strong>
                   <span className={userData.isActive ? 'status-active' : 'status-inactive'}>
                     {userData.isActive ? ' Активний' : ' Неактивний'}
                   </span>
@@ -724,9 +747,9 @@ const UserAdmin: React.FC = () => {
                   <strong>Увага!</strong> Після видалення користувача дані неможливо буде відновити.
                 </div>
 
-                <button 
-                  type="button" 
-                  className="delete-btn" 
+                <button
+                  type="button"
+                  className="delete-btn"
                   onClick={handleDeleteUser}
                   disabled={loading}
                 >

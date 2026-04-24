@@ -23,8 +23,9 @@ export type User = {
   roleIds: number[];
   isActive: boolean;
   isLocked: boolean;
+  isResponsibleForRegion: boolean;
   userMessage: string;
-  userRoles: {id: number; name: string}[];
+  userRoles: { id: number; name: string }[];
 };
 
 export interface AuthState {
