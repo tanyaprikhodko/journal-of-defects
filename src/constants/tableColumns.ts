@@ -21,6 +21,7 @@ export const TABLE_COLUMNS = {
   ELIMINATED: 'Усунув',
   DATE_OF_START_EXPLOITATION: 'Дата прийняття в експлуатацію',
   ACCEPTED_EXPLOITATION_PERSON: 'Прийняв в експлуатацію',
+  DEFECT_COMMENT: 'Коментар дефекту',
   MOVE_TO: 'Перемістити до',
   COMMENTS: 'Коментарі',
 };

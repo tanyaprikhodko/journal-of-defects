@@ -30,6 +30,8 @@ export interface createJournalPayload {
   redirectRegionId?: string | null;
   condition?: string | null;
   comments?: CommentRequest[];
+  responsibleChangeReason?: string | null;
+  acceptanceChangeReason?: string | null;
   substationRegionId?: number;
   substationRegion?: string | null;
 }

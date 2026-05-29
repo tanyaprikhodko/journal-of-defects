@@ -10,6 +10,12 @@ export interface Department {
   name: string;
 }
 
+export interface LoginResponse {
+  accessToken: string | null;
+  refreshToken: string | null;
+  userMessage: string | null;
+}
+
 export type User = {
   id: number;
   name: string;

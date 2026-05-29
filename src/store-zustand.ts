@@ -32,7 +32,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         page: params?.page ? params.page.toString() : get().currentPage?.toString() || '1',
         ColumnName: params?.sortBy || '',
         IsAscending: params?.order === 'asc' ? 'true' : 'false',
-        ItemsPerPage: '20',
+        ItemsPerPage: '50',
         ...get().appliedFilters ? get().appliedFilters : '',
         SearchQuery: params?.search || '',
       });

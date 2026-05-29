@@ -1,3 +1,5 @@
+@use './general.scss' as *;
+
 .main-view-root {
   height: 100vh;
   display: flex;
@@ -6,9 +8,9 @@
 
 .main-view-header {
   display: flex;
-  background-color: #fff;
+  background-color: var(--color-surface);
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   align-items: center;
 }
 
@@ -16,28 +18,28 @@
   margin: 10px 0;
   padding: 10px 20px;
   background-color: transparent;
-  color: #000;
+  color: var(--color-text);
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
-  font-size: 16px;
-  transition: background 0.2s, color 0.2s;
+  font-size: var(--font-size-base);
+  transition: background var(--transition), color var(--transition);
 }
 
 .main-view-btn.active {
-  border: -2px solid #007bff;
-  color: #007bff;
+  border-bottom: 2px solid var(--color-primary);
+  color: var(--color-primary);
 }
 
 .main-view-btn:disabled {
-  color: #6c757d;
+  color: var(--color-secondary);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .main-view-btn:disabled:hover {
-  background-color: #6c757d;
-  color: #ffffff;
+  background-color: transparent;
+  color: var(--color-secondary);
 }
 
 .main-view-pagination {
@@ -51,11 +53,11 @@
   margin: 0 5px;
   padding: 5px 10px;
   background-color: transparent;
-  color: #000;
+  color: var(--color-text);
   border: none;
-  border-radius: 3px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
-  font-size: 16px;
+  font-size: var(--font-size-base);
 }
 
 .main-view-pagination-info {
@@ -73,20 +75,27 @@
   width: 33%;
   padding: 10px 15px;
   margin-top: 32px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-base);
   align-self: center;
+  transition: border-color var(--transition);
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  }
 }
 
 .main-view-footer {
   display: flex;
   justify-content: space-between;
-  background-color: #fff;
+  background-color: var(--color-surface);
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
   padding: 16px 32px;
-  font-size: 14px;
-  color: #000;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
   position: fixed;
   bottom: 0;
   left: 0;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'react-toastify';
-import { User, AuthState } from './types';
+import { User, AuthState, LoginResponse } from './types';
 import { getApiUrl } from './config';
 import { fetchWithAuth } from './utils';
 
@@ -16,29 +16,44 @@ export const useAuthStore = create<AuthState>((set) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login: user, password })
       });
-      if (response.ok) {
-        const { accessToken, refreshToken } = await response.json();
+
+      // Обробка 400 Bad Request (невірний логін/пароль)
+      if (!response.ok) {
+        const errorText = await response.text();
+        toast.error(errorText);
+        set({ isAuthenticated: false, currentUser: null });
+        return false;
+      }
+
+      // Отримуємо дані відповіді
+      const data: LoginResponse = await response.json();
+
+      // Перевіряємо наявність accessToken
+      if (data.accessToken) {
+        // Успішний вхід
         localStorage.setItem('departmentId', departmentId);
-        if (accessToken) {
-          localStorage.setItem('accessToken', accessToken);
-        }
-        if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('accessToken', data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
         }
         set({ isAuthenticated: true });
         toast.success('Успішний вхід до системи');
+
+        // Показуємо повідомлення від адміністратора, якщо є
+        if (data.userMessage) {
+          toast.info(data.userMessage);
+        }
         return true;
       } else {
+        // Акаунт заблокований
         set({ isAuthenticated: false, currentUser: null });
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
-        toast.error(errorMessage);
-        throw new Error(errorMessage);
+        toast.error(data.userMessage ?? 'Вхід неможливий.');
+        return false;
       }
-
     } catch (error) {
       set({ isAuthenticated: false, currentUser: null });
-      console.error(error)
+      console.error(error);
+      toast.error('Помилка підключення до сервера');
       return false;
     }
   },

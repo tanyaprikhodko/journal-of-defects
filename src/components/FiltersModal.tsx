@@ -12,7 +12,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   onApply,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Parse filters from URL on mount
   const getFiltersFromUrl = () => {
     const filtersJson = searchParams.get('filters');
@@ -60,7 +60,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   // Update URL with filters
   const updateFiltersInUrl = (filters: { [key: string]: string }) => {
     const newSearchParams = new URLSearchParams(searchParams);
-    
+
     // Remove empty filter values
     const cleanedFilters = Object.entries(filters).reduce((acc, [key, value]) => {
       if (value !== '' && value !== null && value !== undefined) {
@@ -74,10 +74,10 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
     } else {
       newSearchParams.delete('filters');
     }
-    
+
     // Reset to page 1 when applying filters
     newSearchParams.set('page', '1');
-    
+
     setSearchParams(newSearchParams);
   };
 
@@ -94,18 +94,18 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   const handleReset = () => {
     setValues({});
     resetFilters();
-    
+
     // Remove filters from URL
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.delete('filters');
     newSearchParams.set('page', '1');
     setSearchParams(newSearchParams);
-    
+
     onApply();
   };
 
   return (
-    <div className={`modal-backdrop ${isOpen ? 'open' : ''}`} onClick={() => {isOpen = false; onClose();}}>
+    <div className={`modal-backdrop ${isOpen ? 'open' : ''}`} onClick={() => { isOpen = false; onClose(); }}>
       <div
         className="modal-content"
         onClick={(e) => e.stopPropagation()}
@@ -113,7 +113,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
         <div className="modal-header">
           <h2>Фільтри</h2>
           <button
-            onClick={() => {isOpen = false; onClose();}}
+            onClick={() => { isOpen = false; onClose(); }}
             className="close-button"
             aria-label="Close"
           >
@@ -121,6 +121,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
           </button>
         </div>
         <div className="form-container">
+          {/* 1 — Стан дефекту */}
           <div className="form-field">
             <label htmlFor="Condition">Стан дефекту</label>
             <select
@@ -132,19 +133,14 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
             >
               <option value="">Всі стани</option>
               <option value="Внесений">Внесений</option>
-              <option value="Розглянутий технічним керівником">
-                Розглянутий технічним керівником
-              </option>
-              <option value="Прийнятий до виконання">
-                Прийнятий до виконання
-              </option>
+              <option value="Розглянутий технічним керівником">Розглянутий технічним керівником</option>
+              <option value="Прийнятий до виконання">Прийнятий до виконання</option>
               <option value="Усунутий">Усунутий</option>
               <option value="Протермінований">Протермінований</option>
-              <option value="Прийнятий в експлуатацію">
-                Прийнятий в експлуатацію
-              </option>
+              <option value="Прийнятий в експлуатацію">Прийнятий в експлуатацію</option>
             </select>
           </div>
+          {/* 2 — Номер */}
           <div className="form-field">
             <label htmlFor="Order">Номер</label>
             <input
@@ -154,21 +150,35 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
               value={values.Order ?? ''}
               onChange={handleChange}
               className="form-input"
+              placeholder="Введіть номер"
             />
           </div>
+          {/* 3 — Дата реєстрації */}
           <div className="form-field">
-            <label htmlFor="DateOfRegistration">Дата реєстрації</label>
-            <input
-              id="DateOfRegistration"
-              name="DateOfRegistration"
-              type="date"
-              value={values.DateOfRegistration ?? ''}
-              onChange={handleChange}
-              className="form-input"
-            />
+            <label>Дата реєстрації</label>
+            <div className="form-date-range">
+              <input
+                id="DateOfRegistrationFrom"
+                name="DateOfRegistrationFrom"
+                type="date"
+                value={values.DateOfRegistrationFrom ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+              <span className="form-date-range-separator">—</span>
+              <input
+                id="DateOfRegistrationTo"
+                name="DateOfRegistrationTo"
+                type="date"
+                value={values.DateOfRegistrationTo ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
           </div>
+          {/* 4 — Тип об'єкту */}
           <div className="form-field">
-            <label htmlFor="ObjectType">Тип об'єкта</label>
+            <label htmlFor="ObjectType">Тип об'єкту</label>
             <select
               id="ObjectType"
               name="ObjectType"
@@ -184,6 +194,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
               ))}
             </select>
           </div>
+          {/* 4а — Номер об'єкта */}
           <div className="form-field">
             <label htmlFor="ObjectNumber">Номер об'єкта</label>
             <input
@@ -193,11 +204,30 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
               value={values.ObjectNumber ?? ''}
               onChange={handleChange}
               className="form-input"
+              placeholder="Введіть номер об'єкта"
             />
           </div>
-          {/* Lookup Place select */}
+          {/* 5 — Об'єкт (підстанція) */}
           <div className="form-field">
-            <label htmlFor="Place">Місце</label>
+            <label htmlFor="Substation">Об'єкт</label>
+            <select
+              id="Substation"
+              name="Substation"
+              value={values.Substation ?? ''}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="">Всі об'єкти</option>
+              {substations && substations.map((substation: { id?: string; name: string }) => (
+                <option key={substation.id ?? substation.name ?? substation} value={substation.id ?? substation.name ?? substation}>
+                  {substation.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* 6 — Місце дефекту */}
+          <div className="form-field">
+            <label htmlFor="Place">Місце дефекту</label>
             <select
               id="Place"
               name="Place"
@@ -213,6 +243,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
               ))}
             </select>
           </div>
+          {/* 7 — Приєднання */}
           <div className="form-field">
             <label htmlFor="Connection">Приєднання</label>
             <input
@@ -221,8 +252,10 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
               value={values.Connection ?? ''}
               onChange={handleChange}
               className="form-input"
+              placeholder="Введіть приєднання"
             />
           </div>
+          {/* 8 — Суть дефекту */}
           <div className="form-field">
             <label htmlFor="Description">Суть дефекту</label>
             <input
@@ -231,8 +264,10 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
               value={values.Description ?? ''}
               onChange={handleChange}
               className="form-input"
+              placeholder="Введіть суть дефекту"
             />
           </div>
+          {/* 9 — Автор повідомлення */}
           <div className="form-field">
             <label htmlFor="MessageAuthor">Автор повідомлення</label>
             <select
@@ -244,40 +279,11 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
             >
               <option value="">Всі автори</option>
               {users && users.map((user: { id: number; name: string }) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
+                <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
           </div>
-          <div className="form-field">
-            <label htmlFor="Responsible">Відповідальний за усунення</label>
-            <select
-              id="Responsible"
-              name="Responsible"
-              value={values.Responsible ?? ''}
-              onChange={handleChange}
-              className="form-select"
-            >
-              <option value="">Всі відповідальні</option>
-              {users && users.map((user: { id: number; name: string }) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-field">
-            <label htmlFor="CompletionTerm">Термін виконання</label>
-            <input
-              id="CompletionTerm"
-              name="CompletionTerm"
-              type="date"
-              value={values.CompletionTerm ?? ''}
-              onChange={handleChange}
-              className="form-input"
-            />
-          </div>
+          {/* 10 — Технічний керівник */}
           <div className="form-field">
             <label htmlFor="TechnicalManager">Технічний керівник</label>
             <select
@@ -289,25 +295,75 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
             >
               <option value="">Всі керівники</option>
               {users && users.map((user: { id: number; name: string }) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
+                <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
           </div>
+          {/* 11 — Відповідальний за усунення */}
           <div className="form-field">
-            <label htmlFor="DateOfAcception">Дата прийняття</label>
-            <input
-              id="DateOfAcception"
-              name="DateOfAcception"
-              type="date"
-              value={values.DateOfAcception ?? ''}
+            <label htmlFor="Responsible">Відповідальний за усунення</label>
+            <select
+              id="Responsible"
+              name="Responsible"
+              value={values.Responsible ?? ''}
               onChange={handleChange}
-              className="form-input"
-            />
+              className="form-select"
+            >
+              <option value="">Всі відповідальні</option>
+              {users && users.map((user: { id: number; name: string }) => (
+                <option key={user.id} value={user.id}>{user.name}</option>
+              ))}
+            </select>
           </div>
+          {/* 12 — Термін усунення */}
           <div className="form-field">
-            <label htmlFor="AcceptionAuthor">Прийняв в експлуатацію</label>
+            <label>Термін усунення</label>
+            <div className="form-date-range">
+              <input
+                id="CompletionTermFrom"
+                name="CompletionTermFrom"
+                type="date"
+                value={values.CompletionTermFrom ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+              <span className="form-date-range-separator">—</span>
+              <input
+                id="CompletionTermTo"
+                name="CompletionTermTo"
+                type="date"
+                value={values.CompletionTermTo ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
+          </div>
+          {/* 13 — Дата прийняття до виконання */}
+          <div className="form-field">
+            <label>Дата прийняття до виконання</label>
+            <div className="form-date-range">
+              <input
+                id="DateOfAcceptionFrom"
+                name="DateOfAcceptionFrom"
+                type="date"
+                value={values.DateOfAcceptionFrom ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+              <span className="form-date-range-separator">—</span>
+              <input
+                id="DateOfAcceptionTo"
+                name="DateOfAcceptionTo"
+                type="date"
+                value={values.DateOfAcceptionTo ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
+          </div>
+          {/* 13а — Прийняв до виконання */}
+          <div className="form-field">
+            <label htmlFor="AcceptionAuthor">Прийняв до виконання</label>
             <select
               id="AcceptionAuthor"
               name="AcceptionAuthor"
@@ -317,25 +373,36 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
             >
               <option value="">Всі</option>
               {users && users.map((user: { id: number; name: string }) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
+                <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
           </div>
+          {/* 14 — Дата усунення */}
           <div className="form-field">
-            <label htmlFor="DateOfCompletion">Дата виконання</label>
-            <input
-              id="DateOfCompletion"
-              name="DateOfCompletion"
-              type="date"
-              value={values.DateOfCompletion ?? ''}
-              onChange={handleChange}
-              className="form-input"
-            />
+            <label>Дата усунення</label>
+            <div className="form-date-range">
+              <input
+                id="DateOfCompletionFrom"
+                name="DateOfCompletionFrom"
+                type="date"
+                value={values.DateOfCompletionFrom ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+              <span className="form-date-range-separator">—</span>
+              <input
+                id="DateOfCompletionTo"
+                name="DateOfCompletionTo"
+                type="date"
+                value={values.DateOfCompletionTo ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
           </div>
+          {/* 15 — Усунув */}
           <div className="form-field">
-            <label htmlFor="CompletionAuthor">Виконав</label>
+            <label htmlFor="CompletionAuthor">Усунув</label>
             <select
               id="CompletionAuthor"
               name="CompletionAuthor"
@@ -345,14 +412,36 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
             >
               <option value="">Всі</option>
               {users && users.map((user: { id: number; name: string }) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
+                <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
           </div>
+          {/* 16 — Дата прийняття в експлуатацію */}
           <div className="form-field">
-            <label htmlFor="ConfirmationAuthor">Прийняв до виконання</label>
+            <label>Дата прийняття в експлуатацію</label>
+            <div className="form-date-range">
+              <input
+                id="DateOfConfirmationFrom"
+                name="DateOfConfirmationFrom"
+                type="date"
+                value={values.DateOfConfirmationFrom ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+              <span className="form-date-range-separator">—</span>
+              <input
+                id="DateOfConfirmationTo"
+                name="DateOfConfirmationTo"
+                type="date"
+                value={values.DateOfConfirmationTo ?? ''}
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
+          </div>
+          {/* 17 — Прийняв в експлуатацію */}
+          <div className="form-field">
+            <label htmlFor="ConfirmationAuthor">Прийняв в експлуатацію</label>
             <select
               id="ConfirmationAuthor"
               name="ConfirmationAuthor"
@@ -362,37 +451,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
             >
               <option value="">Всі</option>
               {users && users.map((user: { id: number; name: string }) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-field">
-            <label htmlFor="DateOfConfirmation">Дата прийняття до виконання</label>
-            <input
-              id="DateOfConfirmation"
-              name="DateOfConfirmation"
-              type="date"
-              value={values.DateOfConfirmation ?? ''}
-              onChange={handleChange}
-              className="form-input"
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="Substation">Підстанція</label>
-            <select
-              id="Substation"
-              name="Substation"
-              value={values.Substation ?? ''}
-              onChange={handleChange}
-              className="form-select"
-            >
-              <option value="">Всі підстанції</option>
-              {substations && substations.map((substation: { id?: string; name: string }) => (
-                <option key={substation.id ?? substation.name ?? substation} value={substation.id ?? substation.name ?? substation}>
-                  {substation.name}
-                </option>
+                <option key={user.id} value={user.id}>{user.name}</option>
               ))}
             </select>
           </div>

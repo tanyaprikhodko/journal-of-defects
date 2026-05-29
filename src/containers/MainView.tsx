@@ -32,6 +32,7 @@ const MainView: React.FC = () => {
     { key: 'completedBy', label: TABLE_COLUMNS.ELIMINATED },
     { key: 'confirmationDate', label: TABLE_COLUMNS.DATE_OF_START_EXPLOITATION },
     { key: 'acceptedBy', label: TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON },
+    { key: 'defectComment', label: TABLE_COLUMNS.DEFECT_COMMENT },
   ];
 
   const navigate = useNavigate();
@@ -115,6 +116,7 @@ const MainView: React.FC = () => {
   }, [isInitialLoad, parseUrlParams, setFilters, fetchTableData, fetchUsers]);
 
   const preparedTableData: TableRowDisplay[] = React.useMemo(() => {
+    console.log(tableData)
     return tableData.map(item => {
       return {
         ...item,
@@ -130,6 +132,7 @@ const MainView: React.FC = () => {
         completedBy: item.completedBy ? `${item.completedBy?.name} - ${item.completedBy?.rank}` : '',
         acceptedBy: item.confirmedBy ? `${item.confirmedBy?.name} - ${item.confirmedBy?.rank}` : '',
         confirmedBy: item.acceptedBy ? `${item.acceptedBy?.name} - ${item.acceptedBy?.rank}` : '',
+        defectComment: item.comments?.join(' | ') ?? '',
       }
     });
   }, [tableData]);
@@ -262,7 +265,7 @@ const MainView: React.FC = () => {
         >
           <span role="img" aria-label="Фільтр" style={{ marginRight: 8 }}>🔍</span>
           Фільтр
-          {appliedFilters && <span style={{ marginLeft: 4, color: '#4CAF50' }}>●</span>}
+          {appliedFilters && <span style={{ marginLeft: 4, color: 'var(--color-success)' }}>●</span>}
         </button>
         {actionToNavigate === 'filter' && (
           <FiltersModal

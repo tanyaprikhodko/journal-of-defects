@@ -46,7 +46,7 @@ const AuthorizeContainer: React.FC = () => {
             <h2>Вітаємо Вас у Журналі дефектів</h2>
             {showError && !isAuthenticated && (
                 <div style={{ color: 'red', marginBottom: '10px' }}>
-                    Невірний користувач або пароль
+                    Не вдалося увійти. Перевірте введені дані.
                 </div>
             )}
             <form onSubmit={handleSubmit} className='form'>

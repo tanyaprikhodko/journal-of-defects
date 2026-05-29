@@ -253,6 +253,7 @@ const UserAdmin: React.FC = () => {
                   required
                   disabled={loading}
                   className="text-input"
+                  placeholder="Введіть ім'я"
                 />
               </div>
 
@@ -267,6 +268,7 @@ const UserAdmin: React.FC = () => {
                   required
                   disabled={loading}
                   className="text-input"
+                  placeholder="Введіть логін"
                 />
               </div>
             </div>
@@ -283,6 +285,7 @@ const UserAdmin: React.FC = () => {
                   required
                   disabled={loading}
                   className="text-input"
+                  placeholder="Введіть email"
                 />
               </div>
 
@@ -296,6 +299,7 @@ const UserAdmin: React.FC = () => {
                   onChange={handleChange}
                   disabled={loading}
                   className="text-input"
+                  placeholder="Введіть додатковий email"
                 />
               </div>
             </div>
@@ -312,6 +316,7 @@ const UserAdmin: React.FC = () => {
                   required
                   disabled={loading}
                   className="text-input"
+                  placeholder="Введіть пароль"
                 />
               </div>
 
@@ -325,6 +330,7 @@ const UserAdmin: React.FC = () => {
                   onChange={handleChange}
                   disabled={loading}
                   className="text-input"
+                  placeholder="Введіть посаду"
                 />
               </div>
             </div>
@@ -432,6 +438,7 @@ const UserAdmin: React.FC = () => {
                 disabled={loading}
                 className="textarea-input"
                 rows={3}
+                placeholder="Введіть повідомлення"
               />
             </div>
 
@@ -487,6 +494,7 @@ const UserAdmin: React.FC = () => {
                       required
                       disabled={loading}
                       className="text-input"
+                      placeholder="Введіть ім'я"
                     />
                   </div>
 
@@ -501,6 +509,7 @@ const UserAdmin: React.FC = () => {
                       required
                       disabled={loading}
                       className="text-input"
+                      placeholder="Введіть логін"
                     />
                   </div>
                 </div>
@@ -517,6 +526,7 @@ const UserAdmin: React.FC = () => {
                       required
                       disabled={loading}
                       className="text-input"
+                      placeholder="Введіть email"
                     />
                   </div>
 
@@ -530,6 +540,7 @@ const UserAdmin: React.FC = () => {
                       onChange={handleChange}
                       disabled={loading}
                       className="text-input"
+                      placeholder="Введіть додатковий email"
                     />
                   </div>
                 </div>
@@ -559,6 +570,7 @@ const UserAdmin: React.FC = () => {
                       onChange={handleChange}
                       disabled={loading}
                       className="text-input"
+                      placeholder="Введіть посаду"
                     />
                   </div>
                 </div>
@@ -596,7 +608,6 @@ const UserAdmin: React.FC = () => {
                           {...params}
                           placeholder="Оберіть заступника"
                           className="select-input"
-                          style={{ height: '32px' }}
                         />
                       )}
                       disabled={loading}
@@ -667,6 +678,7 @@ const UserAdmin: React.FC = () => {
                     disabled={loading}
                     className="textarea-input"
                     rows={3}
+                    placeholder="Введіть повідомлення"
                   />
                 </div>
 

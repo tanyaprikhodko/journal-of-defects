@@ -6,9 +6,14 @@ import { useTableStore } from '../store-zustand';
 import { useAuthStore } from "../store-auth";
 import { TableRow, CommentRequest, createJournalPayload } from '../types';
 import 'react-toastify/dist/ReactToastify.css';
-import CommentsModal from '../components/CommentsModal';
-import { TABLE_COLUMNS, INITIAL_ROW_DATA } from '../constants/tableColumns';
+import { INITIAL_ROW_DATA } from '../constants/tableColumns';
 import { parseJwt } from '../utils';
+import DefectInfoSection from './sections/DefectInfoSection';
+import TechnicalLeadSection from './sections/TechnicalLeadSection';
+import AcceptanceSection from './sections/AcceptanceSection';
+import EliminationSection from './sections/EliminationSection';
+import ExploitationSection from './sections/ExploitationSection';
+import MoveAndCommentsSection from './sections/MoveAndCommentsSection';
 
 const EditPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -38,9 +43,29 @@ const EditPage: React.FC = () => {
 
     const isObserver = () => { return currentUserRole.includes('Перегляд всіх журналів'); }
 
+    const isTechnicianOnly = () =>
+        currentUserRole.includes('Виконавець') &&
+        !currentUserRole.includes('Адміністратор') &&
+        !currentUserRole.includes('Технічний керівник');
+
+    const canEditResponsible = () => {
+        if (isObserver()) return false;
+        return (
+            currentUserRole.includes('Адміністратор') ||
+            currentUserRole.includes('Технічний керівник') ||
+            isTechnicianOnly()
+        ) && fetched?.condition === 'Внесений';
+    }
+
     const canFillAccepted = () => {
         if (isObserver()) return false;
-        return fetched?.condition === "Розглянутий технічним керівником" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець'));
+        if (fetched?.condition === "Розглянутий технічним керівником" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець'))) {
+            return true;
+        }
+        if (fetched?.condition === "Прийнятий до виконання" && currentUserRole.includes('Виконавець')) {
+            return true;
+        }
+        return false;
     }
 
     const canFillTechnicalLead = () => {
@@ -52,6 +77,11 @@ const EditPage: React.FC = () => {
         if (isObserver()) return false;
         return (fetched?.condition === "Прийнятий до виконання") && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець') || currentUserRole.includes('Старший диспетчер') || currentUserRole.includes('Диспетчер'));
     }
+
+    const requiresAcceptComment = () =>
+        fetched?.condition === "Прийнятий до виконання" &&
+        currentUserRole.includes('Виконавець') &&
+        !currentUserRole.includes('Адміністратор');
 
     const canFillDone = () => {
         if (isObserver()) return false;
@@ -70,14 +100,20 @@ const EditPage: React.FC = () => {
     const [changedFields, setChangedFields] = React.useState<string[]>([]);
     const [fetched, setFetched] = React.useState<TableRow>(useTableStore.getState().getTableDataById(Number(id)));
     const [redirectRegionId, setRedirectRegionId] = React.useState<string>('');
-   
+    const [acceptanceChangeReason, setAcceptanceChangeReason] = React.useState<string>('');
+    const [acceptanceChangeReasonError, setAcceptanceChangeReasonError] = React.useState<string>('');
+    const [inlineReason, setInlineReason] = React.useState<string>('');
+    const [inlineReasonError, setInlineReasonError] = React.useState<string>('');
+    const [responsibleChangeReason, setResponsibleChangeReason] = React.useState<string>('');
+    const [responsibleChangeReasonError, setResponsibleChangeReasonError] = React.useState<string>('');
+
     React.useEffect(() => {
         async function fetchData() {
             if (id) {
                 await fetchTableDataById(Number(id));
                 setFetched(useTableStore.getState().getTableDataById(Number(id)));
             }
-            if(isObserver()) return;
+            if (isObserver()) return;
             fetchObjectTypes();
             fetchLookupPlaces();
             fetchUsers();
@@ -89,7 +125,7 @@ const EditPage: React.FC = () => {
     }, [id]);
 
     const handleAddComment = (comment: CommentRequest) => {
-        if(isEditMode) {
+        if (isEditMode) {
             addComment(comment);
         } else {
             setChangedFields(prev => [...prev, 'comments']);
@@ -100,7 +136,7 @@ const EditPage: React.FC = () => {
     React.useEffect(() => {
         setForm(
             fetched ??
-            ({...INITIAL_ROW_DATA} as TableRow)
+            ({ ...INITIAL_ROW_DATA } as TableRow)
         );
     }, [id, fetched]);
 
@@ -111,31 +147,78 @@ const EditPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('[handleSubmit] triggered', { changedFields, isEditMode, isCopyMode, isCreateMode });
+        if (isTechnicianOnly() && changedFields.includes('responsible') && !responsibleChangeReason.trim()) {
+            console.log('[handleSubmit] blocked: isTechnicianOnly + responsible changed, no reason');
+            setResponsibleChangeReasonError('Вкажіть причину зміни відповідального');
+            return;
+        }
+        const acceptanceChanged = changedFields.includes('acceptionDate') || changedFields.includes('acceptedBy');
+        console.log('[handleSubmit] requiresAcceptComment:', requiresAcceptComment(), '| acceptanceChanged:', acceptanceChanged, '| inlineReason:', inlineReason);
+        if (requiresAcceptComment() && acceptanceChanged && !inlineReason.trim()) {
+            console.log('[handleSubmit] blocked: requiresAcceptComment + acceptanceChanged, no inlineReason');
+            setInlineReasonError('Вкажіть причину прийняття дефекту');
+            return;
+        }
+        const isChangingAcceptanceExisting =
+            (changedFields.includes('acceptionDate') && !!fetched?.acceptionDate) ||
+            (changedFields.includes('acceptedBy') && !!fetched?.acceptedBy?.id);
+        console.log('[handleSubmit] isChangingAcceptanceExisting:', isChangingAcceptanceExisting, '| acceptanceChangeReason:', acceptanceChangeReason);
+        if (isChangingAcceptanceExisting && !acceptanceChangeReason.trim() && !requiresAcceptComment()) {
+            console.log('[handleSubmit] blocked: isChangingAcceptanceExisting, no acceptanceChangeReason');
+            setAcceptanceChangeReasonError('Вкажіть причину зміни');
+            return;
+        }
         const payload: createJournalPayload = {
             ...changedFields.includes('order') && { order: Number(form.order) || null },
             ...changedFields.includes('objectNumber') && { objectNumber: Number(form.objectNumber) || null },
             ...changedFields.includes('place') && { placeId: Number(form.placeId) || null },
             ...changedFields.includes('responsible') && { responsibleId: Number(form.responsibleId) || null },
-            ...changedFields.includes('completionTerm') && { completionTerm: form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10)  : null },
+            ...changedFields.includes('completionTerm') && { completionTerm: form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10) : null },
             ...changedFields.includes('technicalManager') && { technicalManagerId: Number(form.technicalManagerId) || null },
-            ...changedFields.includes('acceptionDate') && { acceptionDate: form.acceptionDate ? new Date(form.acceptionDate).toISOString().slice(0, 10)  : null },
+            ...changedFields.includes('acceptionDate') && { acceptionDate: form.acceptionDate ? new Date(form.acceptionDate).toISOString().slice(0, 10) : null },
             ...changedFields.includes('acceptedBy') && { acceptedById: Number(form.acceptedById) || null },
-            ...changedFields.includes('completionDate') && { completionDate: form.completionDate ? new Date(form.completionDate).toISOString().slice(0, 10)  : null },
+            ...changedFields.includes('completionDate') && { completionDate: form.completionDate ? new Date(form.completionDate).toISOString().slice(0, 10) : null },
             ...changedFields.includes('completedBy') && { completedById: Number(form.completedById) || null },
-            ...changedFields.includes('confirmationDate') && { confirmationDate: form.confirmationDate ? new Date(form.confirmationDate).toISOString().slice(0, 10)  : null },
+            ...changedFields.includes('confirmationDate') && { confirmationDate: form.confirmationDate ? new Date(form.confirmationDate).toISOString().slice(0, 10) : null },
             ...changedFields.includes('confirmedBy') && { confirmedById: Number(form.confirmedById) || null },
-            ...changedFields.includes('registrationDate') && { registrationDate: form.registrationDate ? new Date(form.registrationDate).toISOString().slice(0, 10)  : null },
+            ...changedFields.includes('registrationDate') && { registrationDate: form.registrationDate ? new Date(form.registrationDate).toISOString().slice(0, 10) : null },
             ...changedFields.includes('object') && { objectTypeId: Number(form.objectTypeId) || null },
             ...changedFields.includes('connection') && { connection: form.connection || null },
             ...changedFields.includes('description') && { description: form.description || null },
             ...changedFields.includes('author') && { messageAuthorId: Number(form.messageAuthorId) || null },
             ...changedFields.includes('redirectRegion') && { redirectRegionId: Number(form.redirectRegionId) || null },
             ...changedFields.includes('substationId') && { substationId: Number(form.substationId) || null },
-            redirectRegionId,
+            redirectRegionId: redirectRegionId || null,
             ...isEditMode && changedFields.includes('comments') ? { comments: commentsToAdd || [] } : {},
+            ...(isTechnicianOnly() && changedFields.includes('responsible') && responsibleChangeReason.trim())
+                ? { responsibleChangeReason: responsibleChangeReason.trim() }
+                : {},
+            ...(acceptanceChangeReason.trim()
+                ? { acceptanceChangeReason: acceptanceChangeReason.trim() }
+                : (requiresAcceptComment() && inlineReason.trim() ? { acceptanceChangeReason: inlineReason.trim() } : {})),
         };
-        await createJournal(payload, isEditMode, id ? Number(id) : null);
-        navigate('/main-view');
+        console.log('[handleSubmit] payload:', payload);
+        if (requiresAcceptComment() && acceptanceChanged && inlineReason.trim()) {
+            const userName = (departmentId && userOptions?.[departmentId]
+                ? userOptions[departmentId].find(u => String(u.id) === String(currentUserId))?.name
+                : null) || '';
+            const dateStr = new Date().toLocaleDateString('uk-UA');
+            await addComment({
+                body: `Причина прийняття: ${inlineReason.trim()}\nЗмінив: ${userName}\nДата зміни: ${dateStr}`,
+                authorId: 1,
+                journalId: form.id as number,
+            });
+        }
+        try {
+            console.log('[handleSubmit] calling createJournal...');
+            await createJournal(payload, isEditMode, id ? Number(id) : null);
+            console.log('[handleSubmit] createJournal succeeded, navigating');
+            navigate('/main-view');
+        } catch (err) {
+            console.error('[handleSubmit] createJournal threw:', err);
+            // error toast is handled by the store
+        }
     };
 
     const handleClose = () => {
@@ -180,254 +263,114 @@ const EditPage: React.FC = () => {
                     onClick={handleClose}
                     className="edit-header__close"
                     title="Закрити"
-                    >
+                >
                     <span role="img" aria-label="close">✖️</span>
                 </button>
             </div>
             <div className="edit-form-container">
-            <form className="edit-form" onSubmit={handleSubmit}> 
-                {/* condition: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.DEFECT_STATE}</label>
-                    <input type="text" name="condition" value={form.condition || ''} style={{ flex: 1 }} disabled />
-                </div>
-                {/* order: number input */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.NUMBER}</label>
-                    <input type="number" name="number" disabled={canEdit() || (isCreateMode && !currentUserRole.includes('Адміністратор'))} value={form.order ?? ''} onChange={e => handleChange(e, 'order')} style={{ flex: 1 }} />
-                </div>
-                {/* registrationDate: date picker */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.CREATED_AT}</label>
-                    <input
-                        type="date"
-                        name="createdAt"
-                        value={form.registrationDate ? new Date(form.registrationDate).toISOString().slice(0, 10) : ''}
-                        disabled={canEdit()}
-                        onChange={e => handleChange(
-                            {
-                                ...e,
-                                target: {
-                                    ...e.target,
-                                    value: new Date(e.target.value).toISOString().slice(0, 10) 
-                                }
-                            },
-                            'registrationDate'
-                        )}
-                        style={{ flex: 1 }}
+                <form className="edit-form" onSubmit={handleSubmit}>
+                    <DefectInfoSection
+                        form={form}
+                        handleChange={handleChange}
+                        canEdit={canEdit()}
+                        isCreateMode={isCreateMode}
+                        currentUserRole={currentUserRole}
+                        objectTypes={objectTypes}
+                        substations={substations}
+                        lookupPlaces={lookupPlaces}
+                        userOptions={userOptions}
+                        departmentId={departmentId}
+                        currentUserId={currentUserId}
                     />
-                </div>
-                {/* object: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.OBJECT_EDIT}</label>
-                    <select name="object" disabled={canEdit()} onChange={e => handleChange(e, 'object')} style={{ flex: 1 }}>
-                        <option value={form.objectType || ''} >{form.objectType || 'Оберіть об\'єкт'}</option>
-                        {objectTypes.map(option => (
-                            <option key={option.id} value={option.id}>{option.type}</option>
-                        ))}
-                    </select>
-                    <input type="number" name="objectNumber" disabled={canEdit()} value={form.objectNumber || ''} onChange={e => handleChange(e, 'objectNumber')} />
-                </div>
-                {/* substation: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.SUBSTATION_EDIT}</label>
-                    <select name="substationRegionId" disabled={canEdit()} value={form.substationRegionId || ''} onChange={e => handleChange(e, 'substationRegionId')} style={{ flex: 1 }}>
-                        <option value={form.substationRegionId || ''}>{substations?.find(option => option.id === form.substationRegionId)?.name || 'Оберіть Регіон'}</option>
-                        {substations?.map(option => (
-                            <option key={option.id} value={option.id}>{option.name}</option>
-                        ))}
-                    </select>
-                    <select name="substationId" disabled={canEdit()} value={form.substationId || ''} onChange={e => handleChange(e, 'substationId')} style={{ flex: 1 }}>
-                        <option value={form.substationId || ''}>{form.substation || 'Оберіть Підстанцію'}</option>
-                       {(substations
-                            ?.find(option => option.id === form.substationRegionId)?.substations || [])
-                            .map(opt => (
-                                <option key={opt.id} value={opt.id}>{opt.name}</option>
-                            ))
+                    <div className="edit-divider" />
+                    <TechnicalLeadSection
+                        form={form}
+                        handleChange={handleChange}
+                        canFillTechnicalLead={canFillTechnicalLead()}
+                        canEditResponsible={canEditResponsible()}
+                        isTechnicianOnly={isTechnicianOnly()}
+                        changedFields={changedFields}
+                        responsibleChangeReason={responsibleChangeReason}
+                        setResponsibleChangeReason={setResponsibleChangeReason}
+                        responsibleChangeReasonError={responsibleChangeReasonError}
+                        setResponsibleChangeReasonError={setResponsibleChangeReasonError}
+                        userOptions={userOptions}
+                        departmentId={departmentId}
+                        currentUserId={currentUserId}
+                    />
+                    <div className="edit-divider" />
+                    <AcceptanceSection
+                        form={form}
+                        handleChange={handleChange}
+                        canFillAccepted={canFillAccepted()}
+                        userOptions={userOptions}
+                        departmentId={departmentId}
+                        isChangingExisting={
+                            (changedFields.includes('acceptionDate') && !!fetched?.acceptionDate) ||
+                            (changedFields.includes('acceptedBy') && !!fetched?.acceptedBy?.id)
                         }
-                    </select>
-                </div>
-                {/* place: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.PLACE_OF_DEFECT}</label>
-                    <select name="place" disabled={canEdit()} value={form.place} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
-                       <option value={form.place} >{form.place || 'Оберіть місце'}</option>
-                        {lookupPlaces?.map(option => (
-                            <option key={option.id} value={option.name}>{option.name}</option>
-                        ))}
-                    </select>
-                </div>
-                {/* connection: text input */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.CONNECTION}</label>
-                    <input type="text" name="connection" disabled={canEdit()} value={form.connection || ''} onChange={e => handleChange(e, 'connection')} style={{ flex: 1 }} />
-                </div>
-                {/* description: text input */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.ESSENCE_OF_DEFECT}</label>
-                    <input type="text" name="description" disabled={canEdit()} value={form.description || ''} onChange={e => handleChange(e, 'description')} style={{ flex: 1 }} />
-                </div>
-                {/* author: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.AUTHOR}</label>
-                    <select name="author" disabled={canEdit()} onChange={e => handleChange(e, 'author')} style={{ flex: 1 }}>
-                        <option value={form.messageAuthor?.id || ''}>{form.messageAuthor?.name || 'Оберіть автора'}</option>
-                        {(departmentId && userOptions?.[departmentId])
-                            ? userOptions[departmentId].filter(user => user.id == currentUserId).map(option => (
-                                <option key={option.id} value={option.id || ''}>{option.name}</option>
-                            ))
-                            : null
-                        }
-                    </select>
-                </div>
-                <div className="edit-divider" />
-                {/* technicalManager: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.TECH_LEAD}</label>
-                    <select name="technicalManager" disabled={!canFillTechnicalLead()} onChange={e => handleChange(e, 'technicalManager')} style={{ flex: 1 }}>
-                        <option value={form.technicalManager?.id || ''}>{form.technicalManager?.name || 'Оберіть керівника'}</option>
-                        {(departmentId && userOptions?.[departmentId])
-                            ? userOptions[departmentId]?.filter(user => user.id == currentUserId).map(option => (
-                                <option key={option.id} value={option.id || ''}>{option.name}</option>
-                            ))
-                            : null
-                        }
-                    </select>
-                </div>
-                {/* responsible: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.RESPONSIBLE_FOR_ELIMINATION}</label>
-                    <select name="responsible" disabled={!canFillTechnicalLead()} onChange={e => handleChange(e, 'responsible')} style={{ flex: 1 }}>
-                        <option value={form.responsible?.id || ''}>{form.responsible?.name || 'Оберіть відповідального'}</option>
-                         {(departmentId && userOptions?.[departmentId])
-                            ? userOptions[departmentId].filter(user => user.roleIds?.includes(2)).map(option => (
-                                <option key={option.id} value={option.id || ''}>{option.name}</option>
-                            ))
-                            : null
-                        }
-                    </select>
-                </div>
-                {/* completionTerm: date picker */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.TIME_OF_ELIMINATION}</label>
-                    <input type="date" disabled={!canFillTechnicalLead()} name="completionTerm" value={form.completionTerm ? new Date(form.completionTerm).toISOString().slice(0, 10) .slice(0, 10) : ''} onChange={e => handleChange(
-                          {
-                                ...e,
-                                target: {
-                                    ...e.target,
-                                    value: new Date(e.target.value).toISOString().slice(0, 10) 
-                                }
-                            }, 'completionTerm')} style={{ flex: 1 }} />
-                </div>
-                <div className="edit-divider" />
-                {/* acceptionDate: date picker */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.DATE_OF_ACCEPTING}</label>
-                    <input type="date" disabled={!canFillAccepted()} name="acceptionDate" value={form.acceptionDate ? new Date(form.acceptionDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
-                        {
-                            ...e,
-                            target: {
-                                ...e.target,
-                                value: new Date(e.target.value).toISOString().slice(0, 10) 
-                            }
-                        }, 'acceptionDate')} style={{ flex: 1 }} />
-                </div>
-                {/* confirmedBy: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_PERSON}</label>
-                    <select name="acceptedBy" disabled={!canFillAccepted()}  onChange={e => handleChange(e, 'acceptedBy')} style={{ flex: 1 }}>
-                        <option value={form.acceptedBy?.name || ''}>{form.acceptedBy?.name || 'Оберіть особу'}</option>
-                        {(departmentId && userOptions?.[departmentId])
-                            ? userOptions[departmentId].map(option => (
-                                <option key={option.id} value={option.id || ''}>{option.name}</option>
-                            ))
-                            : null
-                        }
-                    </select>
-                </div>
-                <div className="edit-divider" />
-                {/* completionDate: date picker */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.DATE_OF_ELIMINATION}</label>
-                    <input type="date" disabled={!canFillEliminated()} name="completionDate" value={form.completionDate ? new Date(form.completionDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
-                        {
-                            ...e,
-                            target: {
-                                ...e.target,
-                                value: new Date(e.target.value).toISOString().slice(0, 10)
-                            }
-                        }, 'completionDate')} style={{ flex: 1 }} />
-                </div>
-                {/* completedBy: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.ELIMINATED}</label>
-                    <select name="completedBy" disabled={!canFillEliminated()} onChange={e => handleChange(e, 'completedBy')} style={{ flex: 1 }}>
-                       <option value={form.completedBy?.name || ''}>{form.completedBy?.name || 'Оберіть особу'}</option>
-                        {(departmentId && userOptions?.[departmentId])
-                            ? userOptions[departmentId].map(option => (
-                                <option key={option.id} value={option.id || ''}>{option.name}</option>
-                            ))
-                            : null
-                        }
-                    </select>
-                </div>
-                <div className="edit-divider" />
-                {/* confirmationDate: date picker */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.DATE_OF_START_EXPLOITATION}</label>
-                    <input type="date" disabled={!canFillDone()} name="confirmationDate" value={form.confirmationDate ? new Date(form.confirmationDate).toISOString().slice(0, 10) : ''} onChange={e => handleChange(
-                        {
-                            ...e,
-                            target: {
-                                ...e.target,
-                                value: new Date(e.target.value).toISOString().slice(0, 10) 
-                            }
-                        }, 'confirmationDate')} style={{ flex: 1 }} />
-                </div>
-                {/* acceptedBy: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON}</label>
-                     <select name="confirmedBy" disabled={!canFillDone()} onChange={e => handleChange(e, 'confirmedBy')} style={{ flex: 1 }}>
-                       <option value={form.confirmedBy?.name || ''}>{form.confirmedBy?.name || 'Оберіть особу'}</option>
-                        {(departmentId && userOptions?.[departmentId])
-                            ? userOptions[departmentId].map(option => (
-                                <option key={option.id} value={option.id || ''}>{option.name}</option>
-                            ))
-                            : null
-                        }
-                    </select>
-                </div>
-                <div className="edit-divider" />
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.MOVE_TO}</label>
-                    <select name="moveTo" value={redirectRegionId} disabled={isCreateMode || isObserver()} onChange={e => setRedirectRegionId(e.target.value)} style={{ flex: 1 }}>
-                        <option value="">Оберіть</option>
-                        {departments.map(department => (
-                            <option key={department.id} value={department.id}>{department.name}</option>
-                        ))}
-                    </select>
-                </div>
-                {/* comments: button with icon, opens modal */}
-                <div className="edit-row">
-                     <label className="edit-label">{TABLE_COLUMNS.COMMENTS}</label>
-                    <button type="button" onClick={() => setShowCommentsModal(true)} className="edit-comments-btn">
-                        <span role="img" aria-label="comments">💬</span>
-                        <span>Коментарі</span>
-                    </button>
-                </div>
-                {showCommentsModal && (
-                    <CommentsModal
-                        journalId={form.id}
-                        onAddComment={(comment) => handleAddComment(comment)}
-                        onClose={() => setShowCommentsModal(false)}
+                        acceptanceChangeReason={acceptanceChangeReason}
+                        setAcceptanceChangeReason={v => { setAcceptanceChangeReason(v); if (v.trim()) setAcceptanceChangeReasonError(''); }}
+                        acceptanceChangeReasonError={acceptanceChangeReasonError}
+                    />
+                    {requiresAcceptComment() && (changedFields.includes('acceptionDate') || changedFields.includes('acceptedBy')) && (
+                        <div className="edit-acceptance-comment">
+                            <div className="edit-acceptance-comment__header">
+                                <span role="img" aria-label="warning" style={{ marginRight: 6 }}>⚠️</span>
+                                Необхідно вказати причину прийняття дефекту
+                            </div>
+                            <div className="edit-acceptance-comment__body">
+                                <div className="edit-row">
+                                    <label className="edit-label">Причина прийняття <span style={{ color: 'var(--color-danger)' }}>*</span></label>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        <textarea
+                                            value={inlineReason}
+                                            rows={2}
+                                            placeholder="Вкажіть причину прийняття дефекту..."
+                                            onChange={e => { setInlineReason(e.target.value); if (e.target.value.trim()) setInlineReasonError(''); }}
+                                            style={{ flex: 1, resize: 'vertical' }}
+                                        />
+                                        {inlineReasonError && <span className="edit-field-error">{inlineReasonError}</span>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div className="edit-divider" />
+                    <EliminationSection
+                        form={form}
+                        handleChange={handleChange}
+                        canFillEliminated={canFillEliminated()}
+                        userOptions={userOptions}
+                        departmentId={departmentId}
+                    />
+                    <div className="edit-divider" />
+                    <ExploitationSection
+                        form={form}
+                        handleChange={handleChange}
+                        canFillDone={canFillDone()}
+                        userOptions={userOptions}
+                        departmentId={departmentId}
+                    />
+                    <div className="edit-divider" />
+                    <MoveAndCommentsSection
+                        redirectRegionId={redirectRegionId}
+                        setRedirectRegionId={setRedirectRegionId}
+                        isCreateMode={isCreateMode}
                         isObserver={isObserver()}
+                        departments={departments}
+                        showCommentsModal={showCommentsModal}
+                        setShowCommentsModal={setShowCommentsModal}
+                        onAddComment={handleAddComment}
+                        requiresAcceptComment={false}
+                        journalId={form.id}
+                        existingComments={fetched?.comments}
                     />
-                )}
-                {!isObserver() && (<button type="submit" className="edit-save-btn">
-                    <span role="img" aria-label="save" style={{ marginRight: 6 }}>💾</span>
-                    Зберегти
-                </button>)}
-            </form>
+                    {!isObserver() && (<button type="submit" className="edit-save-btn">
+                        <span role="img" aria-label="save" style={{ marginRight: 6 }}>💾</span>
+                        Зберегти
+                    </button>)}
+                </form>
             </div>
             <ToastContainer position="top-center" />
         </>

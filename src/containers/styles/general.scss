@@ -1,13 +1,39 @@
 :root {
+    /* Brand colors */
     --color-primary: #007bff;
     --color-primary-dark: #0056b3;
     --color-secondary: #6c757d;
     --color-success: #28a745;
+    --color-success-dark: #1e7e34;
     --color-danger: #dc3545;
+    --color-danger-dark: #c82333;
     --color-warning: #ffc107;
     --color-info: #17a2b8;
     --color-light: #f8f9fa;
     --color-dark: #343a40;
     --color-white: #ffffff;
     --color-black: #000000;
+
+    /* Surfaces & text */
+    --color-bg: #f7fdfe;
+    --color-surface: #ffffff;
+    --color-text: #333333;
+    --color-text-muted: #6c757d;
+    --color-border: #e0e0e0;
+
+    /* Shape */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+
+    /* Elevation */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+    /* Typography */
+    --font-size-sm: 14px;
+    --font-size-base: 16px;
+    --font-size-lg: 22px;
+
+    /* Motion */
+    --transition: 0.2s ease;
 }

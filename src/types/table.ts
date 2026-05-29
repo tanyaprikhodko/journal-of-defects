@@ -33,6 +33,7 @@ export interface TableRow {
   completedById?: number | null;
   acceptedById?: number | null;
   responsibleId?: number | null;
+  comments?: string[];
 }
 
 export interface TableRowDisplay {
@@ -63,4 +64,5 @@ export interface TableRowDisplay {
   objectTypeId?: number | null;
   placeId?: number | null;
   messageAuthorId?: number | null;
+  comments?: string[];
 }

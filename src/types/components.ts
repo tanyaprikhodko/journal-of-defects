@@ -3,7 +3,7 @@ import { AuthUser, User } from './auth';
 import { CommentRequest } from './store';
 
 export interface TableProps {
-  columns: Array<{key: string; label: string}>;
+  columns: Array<{ key: string; label: string }>;
   data: Array<TableRowDisplay>;
   activeRowId?: number | null;
   click?: (id: number) => void;
@@ -14,6 +14,7 @@ export interface EditModalProps {
   onAddComment: (comment: CommentRequest) => void;
   onClose: () => void;
   isObserver: boolean;
+  requireReason?: boolean;
 }
 
 export interface DeleteConfirmationProps {
