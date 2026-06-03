@@ -8,6 +8,7 @@ import { TableRow, createJournalPayload } from '../types';
 import 'react-toastify/dist/ReactToastify.css';
 import { TABLE_COLUMNS, INITIAL_ROW_DATA } from '../constants/tableColumns';
 import { parseJwt } from '../utils';
+import { ROLES } from '../constants/roles';
 
 const CreatePage: React.FC = () => {
     const navigate = useNavigate();
@@ -25,7 +26,7 @@ const CreatePage: React.FC = () => {
     const currentUserRole = jwt ? parseJwt(jwt)?.role : '';
     const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
 
-    const isObserver = () => { return currentUserRole.includes('Перегляд всіх журналів'); };
+    const isObserver = () => { return currentUserRole.includes(ROLES.OBSERVER); };
 
     const [form, setForm] = React.useState<TableRow>({
         ...INITIAL_ROW_DATA,
@@ -101,92 +102,92 @@ const CreatePage: React.FC = () => {
                     onClick={handleClose}
                     className="edit-header__close"
                     title="Закрити"
-                    >
+                >
                     <span role="img" aria-label="close">✖️</span>
                 </button>
             </div>
             <div className="edit-form-container">
-            <form className="edit-form" onSubmit={handleSubmit}> 
-                
-                {/* object: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.OBJECT_EDIT}</label>
-                    <select name="object" onChange={e => handleChange(e, 'object')} style={{ flex: 1 }}>
-                        <option value="">Оберіть об'єкт</option>
-                        {objectTypes.map(option => (
-                            <option key={option.id} value={option.id}>{option.type}</option>
-                        ))}
-                    </select>
-                    <input 
-                        type="number" 
-                        name="objectNumber" 
-                        value={form.objectNumber || ''} 
-                        onChange={e => handleChange(e, 'objectNumber')} 
-                        placeholder="Номер об'єкту"
-                    />
-                </div>
-                
-                {/* substation: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.SUBSTATION_EDIT}</label>
-                    <select 
-                        name="substationId" 
-                        value={form.substationId || ''} 
-                        onChange={e => handleChange(e, 'substationId')} 
-                        style={{ flex: 1 }}
-                    >
-                        <option value="">Оберіть підстанцію</option>
-                        {(substations
-                            ?.find(option => option.id === departmentId)?.substations || [])
-                            .map(opt => (
-                                <option key={opt.id} value={opt.id}>{opt.name}</option>
-                            ))
-                        }
-                    </select>
-                </div>
-                
-                {/* place: select */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.PLACE_OF_DEFECT}</label>
-                    <select name="place" value={form.place || ''} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
-                        <option value="">Оберіть місце</option>
-                        {lookupPlaces?.map(option => (
-                            <option key={option.id} value={option.name}>{option.name}</option>
-                        ))}
-                    </select>
-                </div>
-                
-                {/* connection: text input */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.CONNECTION}</label>
-                    <input 
-                        type="text" 
-                        name="connection" 
-                        value={form.connection || ''} 
-                        onChange={e => handleChange(e, 'connection')} 
-                        style={{ flex: 1 }} 
-                        placeholder="Введіть з'єднання"
-                    />
-                </div>
-                
-                {/* description: text input */}
-                <div className="edit-row">
-                    <label className="edit-label">{TABLE_COLUMNS.ESSENCE_OF_DEFECT}</label>
-                    <input 
-                        type="text" 
-                        name="description" 
-                        value={form.description || ''} 
-                        onChange={e => handleChange(e, 'description')} 
-                        style={{ flex: 1 }} 
-                        placeholder="Опишіть суть дефекту"
-                    />
-                </div>
-                
-                <button type="submit" className="edit-save-btn">
-                    <span role="img" aria-label="save" style={{ marginRight: 6 }}>💾</span>
-                    Створити запис
-                </button>
-            </form>
+                <form className="edit-form" onSubmit={handleSubmit}>
+
+                    {/* object: select */}
+                    <div className="edit-row">
+                        <label className="edit-label">{TABLE_COLUMNS.OBJECT_EDIT}</label>
+                        <select name="object" onChange={e => handleChange(e, 'object')} style={{ flex: 1 }}>
+                            <option value="">Оберіть об'єкт</option>
+                            {objectTypes.map(option => (
+                                <option key={option.id} value={option.id}>{option.type}</option>
+                            ))}
+                        </select>
+                        <input
+                            type="number"
+                            name="objectNumber"
+                            value={form.objectNumber || ''}
+                            onChange={e => handleChange(e, 'objectNumber')}
+                            placeholder="Номер об'єкту"
+                        />
+                    </div>
+
+                    {/* substation: select */}
+                    <div className="edit-row">
+                        <label className="edit-label">{TABLE_COLUMNS.SUBSTATION_EDIT}</label>
+                        <select
+                            name="substationId"
+                            value={form.substationId || ''}
+                            onChange={e => handleChange(e, 'substationId')}
+                            style={{ flex: 1 }}
+                        >
+                            <option value="">Оберіть підстанцію</option>
+                            {(substations
+                                ?.find(option => option.id === departmentId)?.substations || [])
+                                .map(opt => (
+                                    <option key={opt.id} value={opt.id}>{opt.name}</option>
+                                ))
+                            }
+                        </select>
+                    </div>
+
+                    {/* place: select */}
+                    <div className="edit-row">
+                        <label className="edit-label">{TABLE_COLUMNS.PLACE_OF_DEFECT}</label>
+                        <select name="place" value={form.place || ''} onChange={e => handleChange(e, 'place')} style={{ flex: 1 }}>
+                            <option value="">Оберіть місце</option>
+                            {lookupPlaces?.map(option => (
+                                <option key={option.id} value={option.name}>{option.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* connection: text input */}
+                    <div className="edit-row">
+                        <label className="edit-label">{TABLE_COLUMNS.CONNECTION}</label>
+                        <input
+                            type="text"
+                            name="connection"
+                            value={form.connection || ''}
+                            onChange={e => handleChange(e, 'connection')}
+                            style={{ flex: 1 }}
+                            placeholder="Введіть з'єднання"
+                        />
+                    </div>
+
+                    {/* description: text input */}
+                    <div className="edit-row">
+                        <label className="edit-label">{TABLE_COLUMNS.ESSENCE_OF_DEFECT}</label>
+                        <input
+                            type="text"
+                            name="description"
+                            value={form.description || ''}
+                            onChange={e => handleChange(e, 'description')}
+                            style={{ flex: 1 }}
+                            placeholder="Опишіть суть дефекту"
+                        />
+                    </div>
+
+                    <button type="submit" className="edit-save-btn">
+                        <span role="img" aria-label="save" style={{ marginRight: 6 }}>💾</span>
+                        Створити запис
+                    </button>
+                </form>
             </div>
             <ToastContainer position="top-center" />
         </>

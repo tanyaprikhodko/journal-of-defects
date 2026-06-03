@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useTableStore } from '../store-zustand';
 import { useAuthStore } from '../store-auth';
 import './styles/filtersModal.css';
@@ -81,9 +82,28 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
     setSearchParams(newSearchParams);
   };
 
+  const DATE_RANGE_PAIRS: Array<[string, string, string]> = [
+    ['DateOfRegistrationFrom', 'DateOfRegistrationTo', 'Дата реєстрації'],
+    ['CompletionTermFrom', 'CompletionTermTo', 'Термін усунення'],
+    ['DateOfAcceptionFrom', 'DateOfAcceptionTo', 'Дата прийняття до виконання'],
+    ['DateOfCompletionFrom', 'DateOfCompletionTo', 'Дата усунення'],
+    ['DateOfConfirmationFrom', 'DateOfConfirmationTo', 'Дата прийняття в експлуатацію'],
+  ];
+
+  const validateDateRanges = (): boolean => {
+    for (const [from, to, label] of DATE_RANGE_PAIRS) {
+      if (values[from] && values[to] && values[from] > values[to]) {
+        toast.error(`«${label}»: дата початку не може бути пізніше дати кінця`);
+        return false;
+      }
+    }
+    return true;
+  };
+
   let isOpen = open;
 
   const handleApply = () => {
+    if (!validateDateRanges()) return;
     setFilters(values);
     updateFiltersInUrl(values);
     onClose();
@@ -218,11 +238,13 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
               className="form-select"
             >
               <option value="">Всі об'єкти</option>
-              {substations && substations.map((substation: { id?: string; name: string }) => (
-                <option key={substation.id ?? substation.name ?? substation} value={substation.id ?? substation.name ?? substation}>
-                  {substation.name}
-                </option>
-              ))}
+              {substations && substations.flatMap((region: { id: string; name: string; substations: { id: number; name: string }[] }) =>
+                region.substations.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
           {/* 6 — Місце дефекту */}

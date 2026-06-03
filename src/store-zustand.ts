@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'react-toastify';
-import { parseJwt, fetchWithAuth } from './utils';
+import { parseJwt, fetchWithAuth, parseErrorResponse } from './utils';
 import {
   createJournalPayload,
   TableRow,
@@ -41,8 +41,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         method: 'GET',
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -67,8 +66,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const response = await fetchWithAuth(`${getApiUrl()}/Journals/${id}`);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -90,8 +88,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const response = await fetchWithAuth(`${getApiUrl()}/Journals/${id}/comments`);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -121,8 +118,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         body: JSON.stringify({ body: comment.body, authorId: user.nameidentifier, journalId: comment.journalId }),
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -144,8 +140,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const response = await fetchWithAuth(`${getApiUrl()}/Lookups/objectTypes`);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -161,9 +156,8 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const response = await fetchWithAuth(`${getApiUrl()}/Lookups/places`);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
-        toast.error(errorMessage as string);
+        const errorMessage = await parseErrorResponse(response);
+        toast.error(errorMessage);
         throw new Error(errorMessage);
       }
       const data = await response.json();
@@ -179,8 +173,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       const regionId = localStorage.getItem('departmentId');
       const response = await fetchWithAuth(`${getApiUrl()}/Users/by-region/${regionId}`);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -202,8 +195,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const response = await fetchWithAuth(`${getApiUrl()}/Lookups/substationRegions`);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -221,8 +213,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         method: 'DELETE',
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -246,8 +237,7 @@ export const useTableStore = create<TableState>((set, get) => ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -268,8 +258,7 @@ export const useTableStore = create<TableState>((set, get) => ({
     try {
       const response = await fetchWithAuth(`${getApiUrl()}/Lookups/roles`);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -288,8 +277,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         method: 'DELETE',
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -310,8 +298,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         body: JSON.stringify(user),
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -332,8 +319,7 @@ export const useTableStore = create<TableState>((set, get) => ({
         body: JSON.stringify(user),
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }

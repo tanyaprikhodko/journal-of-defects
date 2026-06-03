@@ -38,6 +38,7 @@ export interface AuthState {
   departments: Department[];
   users: AuthUser[];
   isAuthenticated: boolean;
+  isInitializing: boolean;
   currentUser: string | null;
   loginAsync: (user: string, password: string, departmentId: string) => Promise<boolean>;
   logout: () => void;

@@ -1,5 +1,19 @@
 export * from './apiInterceptor';
 
+/**
+ * Safely reads an error response body.
+ * Tries to parse JSON and extract a meaningful message; falls back to raw text.
+ */
+export const parseErrorResponse = async (response: Response): Promise<string> => {
+  const text = await response.text();
+  try {
+    const json = JSON.parse(text);
+    return Object.values(json?.errors || {}).join(' ') || json?.message || json?.title || text || `HTTP ${response.status}`;
+  } catch {
+    return text || `HTTP ${response.status}`;
+  }
+};
+
 export const parseJwt = (token: string) => {
   try {
     const base64Url = token.split('.')[1];

@@ -2,12 +2,13 @@ import { create } from 'zustand';
 import { toast } from 'react-toastify';
 import { User, AuthState, LoginResponse } from './types';
 import { getApiUrl } from './config';
-import { fetchWithAuth } from './utils';
+import { fetchWithAuth, parseErrorResponse } from './utils';
 
 export const useAuthStore = create<AuthState>((set) => ({
   departments: [],
   users: [],
   isAuthenticated: false,
+  isInitializing: !!localStorage.getItem('refreshToken'),
   currentUser: null,
   loginAsync: async (user, password, departmentId) => {
     try {
@@ -72,8 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         : `${getApiUrl()}/Users`;
       const response = await fetch(url);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -97,8 +97,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         },
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -118,8 +117,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await fetch(`${getApiUrl()}/Lookups/regions`);
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = Object.values(errorData?.errors || {}).join(' ');
+        const errorMessage = await parseErrorResponse(response);
         toast.error(errorMessage);
         throw new Error(errorMessage);
       }
@@ -139,7 +137,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const refreshToken = localStorage.getItem('refreshToken');
       const accessToken = localStorage.getItem('accessToken');
       if (!refreshToken) {
-        set({ isAuthenticated: false, currentUser: null });
+        set({ isAuthenticated: false, currentUser: null, isInitializing: false });
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         return false;
@@ -156,21 +154,21 @@ export const useAuthStore = create<AuthState>((set) => ({
         const { accessToken, refreshToken } = await response.json();
         if (accessToken) {
           localStorage.setItem('accessToken', accessToken);
-          set({ isAuthenticated: true });
+          set({ isAuthenticated: true, isInitializing: false });
         }
         if (refreshToken) {
           localStorage.setItem('refreshToken', refreshToken);
         }
         return true;
       } else {
-        set({ isAuthenticated: false, currentUser: null });
+        set({ isAuthenticated: false, currentUser: null, isInitializing: false });
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         toast.error('Сесія закінчилася. Увійдіть знову');
         return false;
       }
     } catch {
-      set({ isAuthenticated: false, currentUser: null });
+      set({ isAuthenticated: false, currentUser: null, isInitializing: false });
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       toast.error('Помилка оновлення токену');

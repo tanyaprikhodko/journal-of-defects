@@ -12,6 +12,7 @@ import FiltersModal from '../components/FiltersModal';
 import '../containers/styles/mainView.scss';
 import 'react-toastify/dist/ReactToastify.css';
 import { parseJwt } from '../utils';
+import { ROLES } from '../constants/roles';
 
 const MainView: React.FC = () => {
   const tableColumns = [
@@ -28,10 +29,13 @@ const MainView: React.FC = () => {
     { key: 'responsible', label: TABLE_COLUMNS.RESPONSIBLE_FOR_ELIMINATION },
     { key: 'completionTerm', label: TABLE_COLUMNS.TIME_OF_ELIMINATION },
     { key: 'acceptionDate', label: TABLE_COLUMNS.DATE_OF_ACCEPTING },
+    // acceptedBy = person who accepted the defect for execution ("Прийняв до виконання")
+    { key: 'acceptedBy', label: TABLE_COLUMNS.ACCEPTED_PERSON },
     { key: 'completionDate', label: TABLE_COLUMNS.DATE_OF_ELIMINATION },
     { key: 'completedBy', label: TABLE_COLUMNS.ELIMINATED },
     { key: 'confirmationDate', label: TABLE_COLUMNS.DATE_OF_START_EXPLOITATION },
-    { key: 'acceptedBy', label: TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON },
+    // confirmedBy = person who accepted the defect into operation ("Прийняв в експлуатацію")
+    { key: 'confirmedBy', label: TABLE_COLUMNS.ACCEPTED_EXPLOITATION_PERSON },
     { key: 'defectComment', label: TABLE_COLUMNS.DEFECT_COMMENT },
   ];
 
@@ -116,7 +120,6 @@ const MainView: React.FC = () => {
   }, [isInitialLoad, parseUrlParams, setFilters, fetchTableData, fetchUsers]);
 
   const preparedTableData: TableRowDisplay[] = React.useMemo(() => {
-    console.log(tableData)
     return tableData.map(item => {
       return {
         ...item,
@@ -129,9 +132,11 @@ const MainView: React.FC = () => {
         messageAuthor: `${item.messageAuthor?.name} - ${item.messageAuthor?.rank}`,
         technicalManager: item.technicalManager ? `${item.technicalManager?.name} - ${item.technicalManager?.rank}` : '',
         responsible: item.responsible ? `${item.responsible?.name} - ${item.responsible?.rank}` : '',
+        // acceptedBy  = "Прийняв до виконання" (accepted the defect for execution)
+        acceptedBy: item.acceptedBy ? `${item.acceptedBy?.name} - ${item.acceptedBy?.rank}` : '',
         completedBy: item.completedBy ? `${item.completedBy?.name} - ${item.completedBy?.rank}` : '',
-        acceptedBy: item.confirmedBy ? `${item.confirmedBy?.name} - ${item.confirmedBy?.rank}` : '',
-        confirmedBy: item.acceptedBy ? `${item.acceptedBy?.name} - ${item.acceptedBy?.rank}` : '',
+        // confirmedBy = "Прийняв в експлуатацію" (confirmed the defect resolved, accepted into operation)
+        confirmedBy: item.confirmedBy ? `${item.confirmedBy?.name} - ${item.confirmedBy?.rank}` : '',
         defectComment: item.comments?.join(' | ') ?? '',
       }
     });
@@ -163,9 +168,9 @@ const MainView: React.FC = () => {
     navigate('/login');
   };
 
-  const isObserver = () => { return currentUserRole.includes('Перегляд всіх журналів'); }
+  const isObserver = () => { return currentUserRole.includes(ROLES.OBSERVER); }
 
-  const isCreateDisabled = () => { return !currentUserRole.includes('Диспетчер') || !currentUserRole.includes('Старший диспетчер') }
+  const isCreateDisabled = () => { return !currentUserRole.includes(ROLES.DISPATCHER) && !currentUserRole.includes(ROLES.SENIOR_DISPATCHER); }
 
   const handleDeleteJournal = () => {
     if (selectedJournalId) {
@@ -283,7 +288,7 @@ const MainView: React.FC = () => {
           <span role="img" aria-label="Довідка" style={{ marginRight: 8 }}>📘</span>
           Довідка
         </button>
-        {currentUserRole.includes('Адміністратор') && (
+        {currentUserRole.includes(ROLES.ADMIN) && (
           <button
             className="main-view-btn"
             onClick={() => navigate('/users-admin')}

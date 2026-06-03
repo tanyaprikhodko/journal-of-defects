@@ -8,6 +8,7 @@ import { TableRow, CommentRequest, createJournalPayload } from '../types';
 import 'react-toastify/dist/ReactToastify.css';
 import { INITIAL_ROW_DATA } from '../constants/tableColumns';
 import { parseJwt } from '../utils';
+import { ROLES, CONDITIONS } from '../constants/roles';
 import DefectInfoSection from './sections/DefectInfoSection';
 import TechnicalLeadSection from './sections/TechnicalLeadSection';
 import AcceptanceSection from './sections/AcceptanceSection';
@@ -41,28 +42,28 @@ const EditPage: React.FC = () => {
     const currentUserId = jwt ? parseJwt(jwt)?.nameidentifier : null;
     const departments = useAuthStore(state => state.departments).filter(dept => dept.id !== departmentId);
 
-    const isObserver = () => { return currentUserRole.includes('Перегляд всіх журналів'); }
+    const isObserver = () => { return currentUserRole.includes(ROLES.OBSERVER); }
 
     const isTechnicianOnly = () =>
-        currentUserRole.includes('Виконавець') &&
-        !currentUserRole.includes('Адміністратор') &&
-        !currentUserRole.includes('Технічний керівник');
+        currentUserRole.includes(ROLES.EXECUTOR) &&
+        !currentUserRole.includes(ROLES.ADMIN) &&
+        !currentUserRole.includes(ROLES.TECH_LEAD);
 
     const canEditResponsible = () => {
         if (isObserver()) return false;
         return (
-            currentUserRole.includes('Адміністратор') ||
-            currentUserRole.includes('Технічний керівник') ||
+            currentUserRole.includes(ROLES.ADMIN) ||
+            currentUserRole.includes(ROLES.TECH_LEAD) ||
             isTechnicianOnly()
-        ) && fetched?.condition === 'Внесений';
+        ) && fetched?.condition === CONDITIONS.REGISTERED;
     }
 
     const canFillAccepted = () => {
         if (isObserver()) return false;
-        if (fetched?.condition === "Розглянутий технічним керівником" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець'))) {
+        if (fetched?.condition === CONDITIONS.REVIEWED_BY_TECH_LEAD && (currentUserRole.includes(ROLES.ADMIN) || currentUserRole.includes(ROLES.EXECUTOR))) {
             return true;
         }
-        if (fetched?.condition === "Прийнятий до виконання" && currentUserRole.includes('Виконавець')) {
+        if (fetched?.condition === CONDITIONS.ACCEPTED_FOR_EXECUTION && currentUserRole.includes(ROLES.EXECUTOR)) {
             return true;
         }
         return false;
@@ -70,27 +71,27 @@ const EditPage: React.FC = () => {
 
     const canFillTechnicalLead = () => {
         if (isObserver()) return false;
-        return (fetched?.condition === "Внесений") && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Технічний керівник'));
+        return (fetched?.condition === CONDITIONS.REGISTERED) && (currentUserRole.includes(ROLES.ADMIN) || currentUserRole.includes(ROLES.TECH_LEAD));
     }
 
     const canFillEliminated = () => {
         if (isObserver()) return false;
-        return (fetched?.condition === "Прийнятий до виконання") && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Виконавець') || currentUserRole.includes('Старший диспетчер') || currentUserRole.includes('Диспетчер'));
+        return (fetched?.condition === CONDITIONS.ACCEPTED_FOR_EXECUTION) && (currentUserRole.includes(ROLES.ADMIN) || currentUserRole.includes(ROLES.EXECUTOR) || currentUserRole.includes(ROLES.SENIOR_DISPATCHER) || currentUserRole.includes(ROLES.DISPATCHER));
     }
 
     const requiresAcceptComment = () =>
-        fetched?.condition === "Прийнятий до виконання" &&
-        currentUserRole.includes('Виконавець') &&
-        !currentUserRole.includes('Адміністратор');
+        fetched?.condition === CONDITIONS.ACCEPTED_FOR_EXECUTION &&
+        currentUserRole.includes(ROLES.EXECUTOR) &&
+        !currentUserRole.includes(ROLES.ADMIN);
 
     const canFillDone = () => {
         if (isObserver()) return false;
-        return fetched?.condition === "Усунутий" && (currentUserRole.includes('Адміністратор') || currentUserRole.includes('Старший диспетчер') || currentUserRole.includes('Диспетчер'));
+        return fetched?.condition === CONDITIONS.ELIMINATED && (currentUserRole.includes(ROLES.ADMIN) || currentUserRole.includes(ROLES.SENIOR_DISPATCHER) || currentUserRole.includes(ROLES.DISPATCHER));
     }
 
     const canEdit = () => {
         if (isEditMode) {
-            return !currentUserRole.includes('Адміністратор') && isObserver();
+            return !currentUserRole.includes(ROLES.ADMIN) && isObserver();
         }
         return false;
     }
@@ -147,25 +148,19 @@ const EditPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('[handleSubmit] triggered', { changedFields, isEditMode, isCopyMode, isCreateMode });
         if (isTechnicianOnly() && changedFields.includes('responsible') && !responsibleChangeReason.trim()) {
-            console.log('[handleSubmit] blocked: isTechnicianOnly + responsible changed, no reason');
             setResponsibleChangeReasonError('Вкажіть причину зміни відповідального');
             return;
         }
         const acceptanceChanged = changedFields.includes('acceptionDate') || changedFields.includes('acceptedBy');
-        console.log('[handleSubmit] requiresAcceptComment:', requiresAcceptComment(), '| acceptanceChanged:', acceptanceChanged, '| inlineReason:', inlineReason);
         if (requiresAcceptComment() && acceptanceChanged && !inlineReason.trim()) {
-            console.log('[handleSubmit] blocked: requiresAcceptComment + acceptanceChanged, no inlineReason');
             setInlineReasonError('Вкажіть причину прийняття дефекту');
             return;
         }
         const isChangingAcceptanceExisting =
             (changedFields.includes('acceptionDate') && !!fetched?.acceptionDate) ||
             (changedFields.includes('acceptedBy') && !!fetched?.acceptedBy?.id);
-        console.log('[handleSubmit] isChangingAcceptanceExisting:', isChangingAcceptanceExisting, '| acceptanceChangeReason:', acceptanceChangeReason);
         if (isChangingAcceptanceExisting && !acceptanceChangeReason.trim() && !requiresAcceptComment()) {
-            console.log('[handleSubmit] blocked: isChangingAcceptanceExisting, no acceptanceChangeReason');
             setAcceptanceChangeReasonError('Вкажіть причину зміни');
             return;
         }
@@ -198,7 +193,6 @@ const EditPage: React.FC = () => {
                 ? { acceptanceChangeReason: acceptanceChangeReason.trim() }
                 : (requiresAcceptComment() && inlineReason.trim() ? { acceptanceChangeReason: inlineReason.trim() } : {})),
         };
-        console.log('[handleSubmit] payload:', payload);
         if (requiresAcceptComment() && acceptanceChanged && inlineReason.trim()) {
             const userName = (departmentId && userOptions?.[departmentId]
                 ? userOptions[departmentId].find(u => String(u.id) === String(currentUserId))?.name
@@ -211,9 +205,7 @@ const EditPage: React.FC = () => {
             });
         }
         try {
-            console.log('[handleSubmit] calling createJournal...');
             await createJournal(payload, isEditMode, id ? Number(id) : null);
-            console.log('[handleSubmit] createJournal succeeded, navigating');
             navigate('/main-view');
         } catch (err) {
             console.error('[handleSubmit] createJournal threw:', err);

@@ -7,12 +7,20 @@ import EditPage from './containers/EditPage';
 import CreatePage from './containers/CreatePage';
 import UserAdmin from './containers/UserAdmin'
 import HelpPage from './containers/HelpPage';
+import { parseJwt } from './utils';
+import { useAuthStore } from './store-auth';
 
 const isAuthenticated = () => {
-    return localStorage.getItem('accessToken') !== null;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return false;
+    const payload = parseJwt(token);
+    if (!payload?.exp) return false;
+    return payload.exp * 1000 > Date.now();
 };
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const isInitializing = useAuthStore((s) => s.isInitializing);
+    if (isInitializing) return null;
     return isAuthenticated() ? children : <Navigate to="/login" />;
 };
 
