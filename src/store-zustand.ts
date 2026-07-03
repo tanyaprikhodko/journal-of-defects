@@ -309,14 +309,19 @@ export const useTableStore = create<TableState>((set, get) => ({
     }
   },
 
-  editUser: async (userId: number, user: Partial<Person>) => {
+  editUser: async (userId: number, user: Partial<Person> & { password?: string }) => {
     try {
+      const payload = { ...user } as Partial<Person> & { password?: string };
+      if (payload.password?.trim() === '') {
+        delete payload.password;
+      }
+
       const response = await fetchWithAuth(`${getApiUrl()}/Users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(user),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) {
         const errorMessage = await parseErrorResponse(response);

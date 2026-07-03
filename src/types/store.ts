@@ -86,7 +86,7 @@ export interface TableState {
   fetchRoles: () => Promise<void>;
   deleteUser: (userId: number) => Promise<void>;
   addUser: (user: Partial<Person>) => Promise<void>;
-  editUser: (userId: number, user: Partial<Person>) => Promise<void>;
+  editUser: (userId: number, user: Partial<Person> & { password?: string }) => Promise<void>;
   getTableDataById: (id: number) => TableRow;
   setFilters: (filters: { [key: string]: string } | null) => void;
   resetFilters: () => void;

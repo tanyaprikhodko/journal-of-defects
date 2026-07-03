@@ -118,6 +118,7 @@ const UserAdmin: React.FC = () => {
       if (user) {
         const preparedData = {
           ...user,
+          password: '',
           roleIds: user?.userRoles?.map(role => role.id) || []
         };
         setUserData(preparedData as User);
