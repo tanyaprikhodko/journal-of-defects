@@ -155,10 +155,10 @@ const MainView: React.FC = () => {
       return;
     }
     if (!actionToNavigate) {
-      navigate(`/edit/${id}`);
+      navigate({ pathname: `/edit/${id}`, search: searchParams.toString() });
     } else {
       if (isObserver()) return;
-      navigate(`/${actionToNavigate}/${id}`);
+      navigate({ pathname: `/${actionToNavigate}/${id}`, search: searchParams.toString() });
     }
     setActionToNavigate('');
   };

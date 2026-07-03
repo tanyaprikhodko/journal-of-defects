@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import './styles/edit.scss';
 import { ToastContainer } from 'react-toastify';
 import { useTableStore } from '../store-zustand';
@@ -18,6 +18,7 @@ import MoveAndCommentsSection from './sections/MoveAndCommentsSection';
 
 const EditPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const isEditMode = window.location.pathname.includes('edit');
     const isCopyMode = window.location.pathname.includes('create-copy');
     const isCreateMode = window.location.pathname === '/create';
@@ -206,7 +207,7 @@ const EditPage: React.FC = () => {
         }
         try {
             await createJournal(payload, isEditMode, id ? Number(id) : null);
-            navigate('/main-view');
+            navigate(`/main-view${location.search}`);
         } catch (err) {
             console.error('[handleSubmit] createJournal threw:', err);
             // error toast is handled by the store
@@ -214,7 +215,7 @@ const EditPage: React.FC = () => {
     };
 
     const handleClose = () => {
-        navigate('/main-view');
+        navigate(`/main-view${location.search}`);
     };
 
     const preparedTitle = () => {
