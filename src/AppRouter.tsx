@@ -7,6 +7,8 @@ import EditPage from './containers/EditPage';
 import CreatePage from './containers/CreatePage';
 import UserAdmin from './containers/UserAdmin'
 import HelpPage from './containers/HelpPage';
+import ProfileContainer from './containers/ProfileContainer';
+import ForgotPasswordContainer from './containers/ForgotPasswordContainer';
 import { parseJwt } from './utils';
 import { useAuthStore } from './store-auth';
 
@@ -38,6 +40,15 @@ const AppRouter: React.FC = () => {
                     <Route path="/" element={<RedirectToProperPage />} />
                     <Route path="/login" element={<AuthorizeContainer />} />
                     <Route path="/help" element={<HelpPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordContainer />} />
+                    <Route
+                        path="/profile"
+                        element={
+                            <PrivateRoute>
+                                <ProfileContainer />
+                            </PrivateRoute>
+                        }
+                    />
                     <Route
                         path="/main-view"
                         element={

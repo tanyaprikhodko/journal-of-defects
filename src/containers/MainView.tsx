@@ -299,6 +299,13 @@ const MainView: React.FC = () => {
         )}
         <button
           className="main-view-btn"
+          onClick={() => navigate('/profile')}
+        >
+          <span role="img" aria-label="Профіль" style={{ marginRight: 8 }}>👤</span>
+          Профіль
+        </button>
+        <button
+          className="main-view-btn"
           onClick={handleLogout}
         >
           <span role="img" aria-label="Вихід" style={{ marginRight: 8 }}>🚪</span>

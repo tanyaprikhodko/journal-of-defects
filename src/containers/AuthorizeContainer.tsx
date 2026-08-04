@@ -122,6 +122,11 @@ const AuthorizeContainer: React.FC = () => {
                     <span className='button-icon'>🔑</span>
                 </button>
             </form>
+            <p style={{ marginTop: '1rem', textAlign: 'center' }}>
+                <button type="button" onClick={() => navigate('/forgot-password')} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', padding: 0 }}>
+                    Забули пароль?
+                </button>
+            </p>
             <ToastContainer position="top-center" />
         </div>
     );

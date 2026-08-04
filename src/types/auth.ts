@@ -16,6 +16,23 @@ export interface LoginResponse {
   userMessage: string | null;
 }
 
+export interface DetailedUser {
+  id: number;
+  name: string;
+  email: string;
+  secondEmail: string | null;
+  login: string;
+  rank: string | null;
+  isActive: boolean;
+  isResponsibleForRegion: boolean;
+  deputyId: number | null;
+  deputyName: string | null;
+  regionId: string;
+  regionName: string | null;
+  userRoles: { id: number; name: string }[];
+  refreshTokenExpiryTime: string | null;
+}
+
 export type User = {
   id: number;
   name: string;

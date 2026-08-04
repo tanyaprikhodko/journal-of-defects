@@ -1,0 +1,47 @@
+@use './general.scss';
+
+.profile-card {
+    margin: auto auto;
+    width: 40%;
+    padding: 20px;
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+
+    .profile-row {
+        display: flex;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--color-border);
+
+        .profile-label {
+            width: 40%;
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+
+        .profile-value {
+            width: 60%;
+            color: var(--color-text);
+        }
+    }
+
+    .profile-back-button {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: .5rem 1rem;
+        background-color: var(--color-secondary);
+        color: var(--color-white);
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+
+        &:hover {
+            background-color: var(--color-dark);
+        }
+    }
+}
